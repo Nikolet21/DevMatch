@@ -1,19 +1,5 @@
 import { defineStore } from 'pinia'
-
-interface User {
-  id?: string
-  firstName?: string
-  lastName?: string
-  email: string
-}
-
-interface UserState {
-  user: User | null
-  isAuthenticated: boolean
-  token: string | null
-  loading: boolean
-  error: string | null
-}
+import type { UserState, UserRegistrationData } from '../interfaces/interfaces'
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
@@ -36,10 +22,7 @@ export const useUserStore = defineStore('user', {
       this.error = null
 
       try {
-        // TODO: Replace with actual API call
         await new Promise(resolve => setTimeout(resolve, 1000))
-
-        // Simulate successful login
         this.user = { email }
         this.isAuthenticated = true
         this.token = 'dummy-token'
@@ -57,20 +40,12 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    async register(userData: {
-      firstName: string
-      lastName: string
-      email: string
-      password: string
-    }) {
+    async register(userData: UserRegistrationData) {
       this.loading = true
       this.error = null
 
       try {
-        // TODO: Replace with actual API call
         await new Promise(resolve => setTimeout(resolve, 1000))
-
-        // Simulate successful registration
         this.user = {
           firstName: userData.firstName,
           lastName: userData.lastName,
