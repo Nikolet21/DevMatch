@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
 
 const router = useRouter()
+const userStore = useUserStore()
 const activeTab = ref('login')
-const isLoading = ref(false)
+const isLoading = computed(() => userStore.isLoading)
+const storeError = computed(() => userStore.error)
 
 interface FormErrors {
   email?: string
@@ -112,15 +115,11 @@ const handleLogin = async () => {
 
   if (!validateLoginForm()) return
 
-  isLoading.value = true
   try {
-    console.log('Login form submitted:', loginForm)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await userStore.login(loginForm.email, loginForm.password, loginForm.rememberMe)
     router.push('/dashboard')
   } catch (error) {
     console.error('Login error:', error)
-  } finally {
-    isLoading.value = false
   }
 }
 
@@ -129,15 +128,16 @@ const handleRegister = async () => {
 
   if (!validateRegisterForm()) return
 
-  isLoading.value = true
   try {
-    console.log('Register form submitted:', registerForm)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await userStore.register({
+      firstName: registerForm.firstName,
+      lastName: registerForm.lastName,
+      email: registerForm.email,
+      password: registerForm.password
+    })
     router.push('/dashboard')
   } catch (error) {
     console.error('Registration error:', error)
-  } finally {
-    isLoading.value = false
   }
 }
 </script>
