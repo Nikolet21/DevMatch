@@ -17,6 +17,11 @@ const router = createRouter({
       path: '/',
       name: 'DevMatch',
       component: () => import('../views/LandingPageView.vue'),
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('../views/LoginView.vue'),
     }
   ],
 })

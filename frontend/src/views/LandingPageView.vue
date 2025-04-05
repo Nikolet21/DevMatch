@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const isHeaderVisible = ref(true)
 const lastScrollPosition = ref(0)
 
@@ -8,6 +10,10 @@ const handleScroll = () => {
   const currentScrollPosition = window.scrollY
   isHeaderVisible.value = currentScrollPosition < lastScrollPosition.value || currentScrollPosition < 50
   lastScrollPosition.value = currentScrollPosition
+}
+
+const navigateToLogin = () => {
+  router.push('/login')
 }
 
 onMounted(() => {
@@ -33,6 +39,7 @@ onMounted(() => {
                 class="text-text-secondary hover:text-primary transition-colors duration-200">Features</a>
               <router-link to="/about" class="text-text-secondary hover:text-primary transition-colors duration-200">About</router-link>
               <button
+                @click="navigateToLogin"
                 class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors duration-200">
                 Sign In
               </button>
@@ -42,9 +49,9 @@ onMounted(() => {
       </nav>
     </header>
     <!-- Hero Section -->
-    <section class="relative overflow-hidden py-20 sm:py-32">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-20">
+    <section class="relative overflow-hidden py-28 sm:py-36 lg:py-48">
+      <div class="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:gap-y-20">
           <div class="relative z-10 mx-auto max-w-2xl lg:col-span-7 lg:max-w-none lg:pt-6">
             <h1 class="text-4xl font-bold tracking-tight text-text-primary sm:text-6xl">
               Connect with Developers Who Match Your Code
@@ -56,6 +63,7 @@ onMounted(() => {
             </p>
             <div class="mt-8 flex gap-4">
               <button
+                @click="navigateToLogin"
                 class="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20">
                 Get Started
               </button>
@@ -77,7 +85,7 @@ onMounted(() => {
     </section>
 
     <!-- Features Section -->
-    <section class="py-20 sm:py-32">
+    <section class="relative overflow-hidden py-24 sm:py-36 lg:py-48">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-2xl text-center">
           <h2 class="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">Match. Connect. Code.</h2>
@@ -104,7 +112,7 @@ onMounted(() => {
                 <svg class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                   stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                 </svg>
               </div>
               <h3 class="mt-4 text-lg font-semibold text-text-primary">Matching Functionality</h3>
@@ -127,28 +135,29 @@ onMounted(() => {
     </section>
 
     <!-- CTA Section -->
-    <section class="relative isolate mt-16 px-6 py-20 sm:mt-32 sm:px-8 md:py-32">
+    <section class="relative isolate mt-24 px-6 py-28 sm:mt-36 sm:px-8 sm:py-36 lg:py-48">
       <div class="absolute inset-x-0 top-1/2 -z-10 -translate-y-1/2 transform-gpu overflow-hidden opacity-30 blur-3xl"
         aria-hidden="true">
         <div class="ml-[max(50%,38rem)] aspect-[1313/771] w-[82.0625rem] bg-gradient-to-tr from-primary to-secondary">
         </div>
       </div>
-      <div class="mx-auto max-w-2xl text-center">
+      <div class="mx-auto max-w-3xl text-center">
         <h2 class="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">Ready to find your perfect match?</h2>
         <p class="mx-auto mt-6 max-w-xl text-lg text-text-secondary">
           Join thousands of developers who have found their ideal coding partners through DevMatch.
         </p>
         <div class="mt-10 flex justify-center gap-x-6">
           <button
+            @click="navigateToLogin"
             class="rounded-lg bg-primary px-8 py-4 text-base font-semibold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20">
-            Sign Up Now
+            Get Started
           </button>
         </div>
       </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-background pt-16 pb-12 relative overflow-hidden">
+    <footer class="bg-background pt-24 pb-16 relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-primary/10"></div>
       <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
