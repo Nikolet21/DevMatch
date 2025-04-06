@@ -10,14 +10,6 @@ const ChatSection = defineAsyncComponent(() => import('@/components/ChatSection.
 const router = useRouter()
 const activeTab = ref('dashboard')
 const isSidebarCollapsed = ref(window.innerWidth < 1024)
-const isHeaderVisible = ref(true)
-const lastScrollPosition = ref(0)
-
-const handleScroll = () => {
-  const currentScrollPosition = window.scrollY
-  isHeaderVisible.value = currentScrollPosition < lastScrollPosition.value || currentScrollPosition < 50
-  lastScrollPosition.value = currentScrollPosition
-}
 
 const handleResize = () => {
   isSidebarCollapsed.value = window.innerWidth < 1024
@@ -41,12 +33,10 @@ const logout = () => {
 }
 
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
   window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('resize', handleResize)
 })
 </script>
@@ -55,8 +45,7 @@ onUnmounted(() => {
   <div class="min-h-screen bg-background">
     <!-- Header/Navigation -->
     <header
-      class="fixed top-0 left-0 right-0 z-50 transition-transform duration-300 bg-gradient-to-r from-primary/95 to-primary/80 backdrop-blur-sm shadow-lg"
-      :class="{ '-translate-y-full': !isHeaderVisible }">
+      class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary/95 to-primary/80 backdrop-blur-sm shadow-lg">
       <nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
           <div class="flex items-center space-x-8">
@@ -103,8 +92,8 @@ onUnmounted(() => {
         <div class="flex">
           <!-- Sidebar -->
           <aside
-            class="fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white/95 backdrop-blur-sm border-r border-gray-100 shadow-xl transition-all duration-300 ease-in-out overflow-y-auto"
-            :class="isSidebarCollapsed ? 'w-16' : 'w-72'">
+            class="fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white/95 backdrop-blur-sm border-r border-gray-100 shadow-xl transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden"
+            :class="isSidebarCollapsed ? 'w-16' : 'w-64'">
             <!-- Toggle Button -->
             <button @click="toggleSidebar"
               class="absolute -right-3 top-4 bg-primary text-white p-1.5 rounded-full shadow-lg hover:bg-primary/90 transition-all duration-200 hover:scale-105 z-10">
@@ -121,37 +110,37 @@ onUnmounted(() => {
                 <h2 class="text-lg font-semibold text-text-primary flex items-center space-x-2 mb-4"
                   :class="{ 'justify-center': isSidebarCollapsed }">
                   <font-awesome-icon icon="bolt" class="w-5 h-5 text-primary" />
-                  <span v-if="!isSidebarCollapsed">Quick Actions</span>
+                  <span v-if="!isSidebarCollapsed" class="truncate">Quick Actions</span>
                 </h2>
                 <button @click="activeTab = 'dashboard'"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'dashboard' }">
                   <font-awesome-icon icon="bars" class="w-5 h-5 flex-shrink-0" />
-                  <span v-if="!isSidebarCollapsed" class="whitespace-nowrap">Dashboard</span>
+                  <span v-if="!isSidebarCollapsed" class="truncate">Dashboard</span>
                 </button>
                 <button @click="activeTab = 'match-cards'"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'match-cards' }">
                   <font-awesome-icon icon="users" class="w-5 h-5 flex-shrink-0" />
-                  <span v-if="!isSidebarCollapsed" class="whitespace-nowrap">Find Matches</span>
+                  <span v-if="!isSidebarCollapsed" class="truncate">Find Matches</span>
                 </button>
                 <button @click="activeTab = 'matches'"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'matches' }">
                   <font-awesome-icon icon="users" class="w-5 h-5 flex-shrink-0" />
-                  <span v-if="!isSidebarCollapsed" class="whitespace-nowrap">Matched Developers</span>
+                  <span v-if="!isSidebarCollapsed" class="truncate">Matched Developers</span>
                 </button>
                 <button @click="activeTab = 'chats'"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'chats' }">
                   <font-awesome-icon icon="comments" class="w-5 h-5 flex-shrink-0" />
-                  <span v-if="!isSidebarCollapsed" class="whitespace-nowrap">Active Chats</span>
+                  <span v-if="!isSidebarCollapsed" class="truncate">Active Chats</span>
                 </button>
                 <button @click="navigateToSettings"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   :class="{ 'justify-center px-2': isSidebarCollapsed }">
                   <font-awesome-icon icon="cog" class="w-5 h-5 flex-shrink-0" />
-                  <span v-if="!isSidebarCollapsed" class="whitespace-nowrap">Settings</span>
+                  <span v-if="!isSidebarCollapsed" class="truncate">Settings</span>
                 </button>
               </div>
             </div>
