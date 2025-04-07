@@ -1,15 +1,33 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const isVisible = ref(false)
 
 onMounted(() => {
   isVisible.value = true
 })
+
+const navigateToLanding = () => {
+  router.push('/')
+}
 </script>
 
 <template>
   <div class="min-h-screen bg-background">
+    <!-- Return Button -->
+    <div class="fixed top-4 left-4 z-50">
+      <button
+        @click="navigateToLanding"
+        class="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors duration-200"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Back to Home</span>
+      </button>
+    </div>
     <!-- Hero Section -->
     <section class="relative overflow-hidden py-20 sm:py-32">
       <div class="absolute inset-x-0 top-1/2 -z-10 -translate-y-1/2 transform-gpu overflow-hidden opacity-30 blur-3xl">
