@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useMatchStore } from '@/stores/matchStore'
+import { onMounted, computed } from 'vue'
+import { useMatchStore } from '../stores/matchStore'
+
+const props = defineProps<{
+  isSidebarCollapsed: boolean
+}>()
 
 const matchStore = useMatchStore()
 const stackSize = 3 // Number of cards to show in the stack
@@ -50,19 +54,20 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="h-full bg-background flex items-center justify-center">
-    <div class="w-full max-w-xl px-4 sm:px-6 lg:px-8">
+  <div class="fixed top-16 right-0 bottom-0 bg-background flex items-center justify-center" :style="{ left: isSidebarCollapsed ? '4rem' : '16rem' }">
+    <div class="relative w-full max-w-2xl h-[calc(100vh-4rem)] flex items-center justify-center">
+    <div class="w-full max-w-lg px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <!-- Main Container -->
-      <div class="relative flex justify-center">
+      <div class="relative flex justify-center w-full max-h-[90vh] aspect-[3/4]">
         <!-- Cards Container -->
-        <div class="relative w-full">
+        <div class="relative w-full h-full">
           <div v-for="(card, index) in visibleCards" :key="card.id"
-            class="absolute w-full rounded-3xl bg-card shadow-xl ring-1 ring-gray-900/10 transition-all duration-500 ease-out hover:shadow-2xl"
+            class="absolute w-full h-full rounded-3xl bg-card shadow-xl ring-1 ring-gray-900/10 transition-all duration-500 ease-out hover:shadow-2xl"
             :style="getCardStyle(index)">
 
-            <div class="relative aspect-[3/4] w-full overflow-hidden rounded-t-3xl">
+            <div class="relative h-[60%] w-full overflow-hidden rounded-t-3xl">
               <img :src="card.image" :alt="card.name" class="h-full w-full object-cover" />
-              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-5">
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
                 <div class="text-white">
                   <h1 class="text-xl font-bold">{{ card.name }}</h1>
                   <p class="text-base opacity-90">{{ card.role }}</p>
@@ -71,16 +76,16 @@ onMounted(() => {
               </div>
             </div>
 
-            <div class="p-5">
+            <div class="p-4 h-[40%] overflow-hidden">
               <p class="text-sm text-text-secondary line-clamp-3">{{ card.bio }}</p>
 
-              <div class="mt-3">
+              <div class="mt-2">
                 <h2 class="text-base font-semibold text-text-primary mb-2">Skills</h2>
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-wrap gap-1.5">
                   <span
                     v-for="skill in card.skills"
                     :key="skill"
-                    class="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                    class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
                   >
                     {{ skill }}
                   </span>
@@ -113,6 +118,7 @@ onMounted(() => {
           </button>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>
