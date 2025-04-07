@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useMatchStore } from '@/stores/matchStore'
+import { useMatchStore } from '../stores/matchStore'
 
-const router = useRouter()
+const emit = defineEmits(['update:activeTab'])
 const matchStore = useMatchStore()
-const firstName = ref('John') // TODO: Get from user store
-const profileCompletion = ref(80) // TODO: Calculate from profile data
+const firstName = ref('John')
+const profileCompletion = ref(80)
 
 onMounted(async () => {
   await matchStore.fetchMatches()
@@ -22,15 +21,15 @@ const recentMatches = matchStore.recentMatches.map(match => ({
 const stats = matchStore.matchStats
 
 const navigateToProfile = () => {
-  router.push('/profile')
+  emit('update:activeTab', 'profile')
 }
 
 const navigateToMatches = () => {
-  router.push('/matches')
+  emit('update:activeTab', 'matches')
 }
 
 const startBrowsing = () => {
-  router.push('/browse')
+  emit('update:activeTab', 'browse')
 }
 </script>
 
@@ -95,19 +94,29 @@ const startBrowsing = () => {
     <!-- Recent Matches -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <h2 class="text-xl font-semibold text-text-primary mb-4">Recent Matches 🧑‍💻</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div v-if="recentMatches.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <div v-for="match in recentMatches" :key="match.id"
-          class="flex items-center space-x-4 p-4 rounded-lg border border-gray-100 hover:border-primary/20 transition-all duration-200">
-          <img :src="match.avatar" :alt="match.name" class="w-12 h-12 rounded-full bg-gray-100" />
+          class="flex items-center space-x-3 p-3 rounded-lg border border-gray-100 hover:border-primary/20 transition-all duration-200">
+          <img :src="match.avatar" :alt="match.name" class="w-10 h-10 rounded-full bg-gray-100" />
           <div class="flex-1 min-w-0">
             <h3 class="text-sm font-medium text-text-primary truncate">{{ match.name }}</h3>
             <p class="text-xs text-text-secondary truncate">{{ match.location }}</p>
           </div>
           <button
-            class="shrink-0 px-3 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full hover:bg-primary/20 transition-colors duration-200">
+            class="shrink-0 px-2.5 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full hover:bg-primary/20 transition-colors duration-200">
             Message
           </button>
         </div>
+      </div>
+      <div v-else class="text-center py-8">
+        <div class="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+          <font-awesome-icon icon="users" class="w-8 h-8 text-primary" />
+        </div>
+        <h3 class="text-lg font-medium text-text-primary mb-2">No Recent Matches</h3>
+        <p class="text-text-secondary">Start browsing to find your perfect match!</p>
+        <button @click="startBrowsing" class="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200">
+          Browse Developers
+        </button>
       </div>
     </div>
 
