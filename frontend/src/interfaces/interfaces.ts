@@ -1,3 +1,28 @@
+export interface ChatMessage {
+  id: string
+  senderId: string
+  receiverId: string
+  content: string
+  timestamp: Date
+  isRead: boolean
+}
+
+export interface ChatPartner {
+  id: string
+  name: string
+  avatar?: string
+  isOnline: boolean
+  lastSeen?: Date
+}
+
+export interface Chat {
+  id: string
+  participants: string[]
+  messages: ChatMessage[]
+  unreadCount: number
+  lastMessage?: ChatMessage
+}
+
 export interface Developer {
   id: number
   name: string

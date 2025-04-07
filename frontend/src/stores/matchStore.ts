@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-
 import type { Developer, Match, MatchState } from '../interfaces/interfaces'
+import { mockDevelopers } from '../data/mockData'
 
 
 export const useMatchStore = defineStore('match', {
@@ -35,65 +35,7 @@ export const useMatchStore = defineStore('match', {
       this.isLoading = true
       this.error = null
       try {
-        // Mock data for development
-        const mockDevelopers: Developer[] = [
-          {
-            id: 1,
-            name: 'Alice Johnson',
-            bio: 'Full Stack Developer with 5 years of experience in React and Node.js. Passionate about building scalable web applications and mentoring junior developers.',
-            location: 'San Francisco, CA',
-            skills: ['React', 'Node.js', 'TypeScript', 'MongoDB', 'AWS'],
-            avatar: 'https://i.pravatar.cc/300?img=1'
-          },
-          {
-            id: 2,
-            name: 'Bob Smith',
-            bio: 'Backend Developer specializing in Go and distributed systems. Love solving complex architectural challenges and optimizing system performance.',
-            location: 'Seattle, WA',
-            skills: ['Go', 'Docker', 'Kubernetes', 'PostgreSQL', 'gRPC'],
-            avatar: 'https://i.pravatar.cc/300?img=2'
-          },
-          {
-            id: 3,
-            name: 'Carol White',
-            bio: 'Frontend Developer passionate about UI/UX and accessibility. Creating beautiful and inclusive web experiences is my mission.',
-            location: 'New York, NY',
-            skills: ['Vue.js', 'CSS', 'Tailwind', 'Jest', 'Figma'],
-            avatar: 'https://i.pravatar.cc/300?img=3'
-          },
-          {
-            id: 4,
-            name: 'David Chen',
-            bio: 'Mobile Developer with expertise in React Native and Flutter. Building cross-platform apps that feel native and perform seamlessly.',
-            location: 'Austin, TX',
-            skills: ['React Native', 'Flutter', 'Firebase', 'Redux', 'GraphQL'],
-            avatar: 'https://i.pravatar.cc/300?img=4'
-          },
-          {
-            id: 5,
-            name: 'Emma Davis',
-            bio: 'DevOps Engineer focused on CI/CD and cloud infrastructure. Automating everything that can be automated!',
-            location: 'Portland, OR',
-            skills: ['AWS', 'Terraform', 'Jenkins', 'Ansible', 'Python'],
-            avatar: 'https://i.pravatar.cc/300?img=5'
-          },
-          {
-            id: 6,
-            name: 'Frank Miller',
-            bio: 'Security Engineer specializing in web application security and penetration testing. Making the web a safer place one test at a time.',
-            location: 'Boston, MA',
-            skills: ['Penetration Testing', 'OWASP', 'Python', 'Burp Suite', 'Metasploit'],
-            avatar: 'https://i.pravatar.cc/300?img=6'
-          },
-          {
-            id: 7,
-            name: 'Grace Lee',
-            bio: 'Data Scientist with a focus on machine learning and AI. Turning data into actionable insights and building intelligent systems.',
-            location: 'Chicago, IL',
-            skills: ['Python', 'TensorFlow', 'PyTorch', 'SQL', 'Pandas'],
-            avatar: 'https://i.pravatar.cc/300?img=7'
-          }
-        ]
+        // Use mock data from mockData.ts for development
         this.potentialMatches = mockDevelopers
       } catch (error) {
         this.error = 'Failed to fetch potential matches'
