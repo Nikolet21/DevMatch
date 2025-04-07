@@ -5,12 +5,12 @@ import { createPinia } from 'pinia'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faUser, faRightFromBracket, faBolt, faUsers, faComments, faGear, faBars } from '@fortawesome/free-solid-svg-icons'
+import { faUser, faRightFromBracket, faBolt, faUsers, faComments, faGear, faBars, faSearch, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
 import router from './router/router'
 
-library.add(faUser, faRightFromBracket, faBolt, faUsers, faComments, faGear, faBars)
+library.add(faUser, faRightFromBracket, faBolt, faUsers, faComments, faGear, faBars, faSearch, faArrowRight)
 
 const app = createApp(App)
 

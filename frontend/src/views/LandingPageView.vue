@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useIntersectionObserver } from '@vueuse/core'
 
 const router = useRouter()
 const isHeaderVisible = ref(true)
 const lastScrollPosition = ref(0)
+const featureRefs = ref<HTMLElement[]>([])
+const isVisible = ref<boolean[]>([])
 
 const handleScroll = () => {
   const currentScrollPosition = window.scrollY
@@ -16,8 +19,36 @@ const navigateToLogin = () => {
   router.push('/login')
 }
 
+const scrollToFeatures = () => {
+  const featuresSection = document.getElementById('features-section')
+  if (featuresSection) {
+    const headerHeight = 64
+    const targetPosition = featuresSection.offsetTop - headerHeight
+    window.scrollTo({
+      top: targetPosition,
+      behavior: 'smooth'
+    })
+  }
+}
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
+
+  featureRefs.value.forEach((el, index) => {
+    if (el) {
+      el.classList.add('fade-in')
+      const observer = useIntersectionObserver(el, ([{ isIntersecting }]) => {
+        if (isIntersecting && !isVisible.value[index]) {
+          isVisible.value[index] = true
+          el.classList.add('visible')
+        }
+      }, { threshold: 0.2 })
+    }
+  })
+
+  return () => {
+    window.removeEventListener('scroll', handleScroll)
+  }
 })
 </script>
 
@@ -35,7 +66,8 @@ onMounted(() => {
           </div>
           <div class="hidden md:block">
             <div class="flex items-center space-x-8">
-              <a href="#features"
+              <a href="#features-section"
+                @click.prevent="scrollToFeatures"
                 class="text-text-secondary hover:text-primary transition-colors duration-200">Features</a>
               <router-link to="/about" class="text-text-secondary hover:text-primary transition-colors duration-200">About</router-link>
               <button
@@ -85,7 +117,7 @@ onMounted(() => {
     </section>
 
     <!-- Features Section -->
-    <section class="relative overflow-hidden py-24 sm:py-36 lg:py-48">
+    <section id="features-section" class="relative overflow-hidden py-24 sm:py-36 lg:py-48">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-2xl text-center">
           <h2 class="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">Match. Connect. Code.</h2>
@@ -94,40 +126,54 @@ onMounted(() => {
           </p>
         </div>
         <div class="mx-auto mt-16 max-w-7xl">
-          <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="grid grid-cols-1 gap-12">
             <!-- Feature 1: Developer Profiles -->
-            <div class="relative rounded-2xl bg-card p-6 shadow-sm ring-1 ring-gray-900/5">
-              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                </svg>
+            <div
+              ref="el => featureRefs.value[0] = el"
+              :class="{ 'fade-in': isVisible[0] }"
+              class="relative rounded-3xl bg-gradient-to-br from-primary/5 to-primary/10 p-8 shadow-lg ring-1 ring-gray-900/5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 transform">
+              <div class="flex items-center space-x-6">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/20">
+                  <font-awesome-icon icon="user" class="text-primary text-2xl" />
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-2xl font-bold text-text-primary">Developer Profiles</h3>
+                  <p class="mt-3 text-lg text-text-secondary">Create your profile with basic information including name, picture, bio, and location. Showcase your skills in programming languages, frameworks, and tools.</p>
+                </div>
+                <img src="../assets/developer-profiles.svg" alt="Developer Profiles" class="w-48 h-48 object-contain" />
               </div>
-              <h3 class="mt-4 text-lg font-semibold text-text-primary">Developer Profiles</h3>
-              <p class="mt-2 text-text-secondary">Create your profile with basic information including name, picture, bio, and location. Showcase your skills in programming languages, frameworks, and tools.</p>
             </div>
             <!-- Feature 2: Matching Functionality -->
-            <div class="relative rounded-2xl bg-card p-6 shadow-sm ring-1 ring-gray-900/5">
-              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary/10">
-                <svg class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                </svg>
+            <div
+              ref="el => featureRefs.value[1] = el"
+              :class="{ 'fade-in': isVisible[1] }"
+              class="relative rounded-3xl bg-gradient-to-br from-secondary/5 to-secondary/10 p-8 shadow-lg ring-1 ring-gray-900/5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 transform">
+              <div class="flex items-center space-x-6">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/20">
+                  <font-awesome-icon icon="bolt" class="text-secondary text-2xl" />
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-2xl font-bold text-text-primary">Matching Functionality</h3>
+                  <p class="mt-3 text-lg text-text-secondary">Swipe right if you're interested in connecting with a developer, or swipe left to skip. When both developers swipe right, it's a match!</p>
+                </div>
+                <img src="../assets/matching-functionality.svg" alt="Matching Functionality" class="w-48 h-48 object-contain" />
               </div>
-              <h3 class="mt-4 text-lg font-semibold text-text-primary">Matching Functionality</h3>
-              <p class="mt-2 text-text-secondary">Swipe right if you're interested in connecting with a developer, or swipe left to skip. When both developers swipe right, it's a match!</p>
             </div>
             <!-- Feature 3: Messaging System -->
-            <div class="relative rounded-2xl bg-card p-6 shadow-sm ring-1 ring-gray-900/5">
-              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
-                <svg class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                </svg>
+            <div
+              ref="el => featureRefs.value[2] = el"
+              :class="{ 'fade-in': isVisible[2] }"
+              class="relative rounded-3xl bg-gradient-to-br from-success/5 to-success/10 p-8 shadow-lg ring-1 ring-gray-900/5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 transform">
+              <div class="flex items-center space-x-6">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-success/20">
+                  <font-awesome-icon icon="comments" class="text-success text-2xl" />
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-2xl font-bold text-text-primary">Messaging System</h3>
+                  <p class="mt-3 text-lg text-text-secondary">Once matched, instantly connect through our real-time messaging system. Send and receive messages with a simple text-based interface.</p>
+                </div>
+                <img src="../assets/messaging-system.svg" alt="Messaging System" class="w-48 h-48 object-contain" />
               </div>
-              <h3 class="mt-4 text-lg font-semibold text-text-primary">Messaging System</h3>
-              <p class="mt-2 text-text-secondary">Once matched, instantly connect through our real-time messaging system. Send and receive messages with a simple text-based interface.</p>
             </div>
           </div>
         </div>
@@ -248,11 +294,18 @@ onMounted(() => {
 
 <style scoped>
 .fade-in {
-  animation: fadeIn 0.5s ease-in;
+  opacity: 0;
+  transform: translateX(-100px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.fade-in:nth-child(even) {
+  transform: translateX(100px);
+}
+
+.visible {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
 }
 </style>
