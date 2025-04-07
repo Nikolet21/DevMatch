@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '../stores/userStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -6,29 +7,52 @@ const router = createRouter({
     {
       path: '/home',
       name: 'home',
-      component: () => import('../views/HomeView.vue')
+      component: () => import('../views/HomeView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/about',
       name: 'about',
       component: () => import('../views/AboutView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/',
       name: 'DevMatch',
       component: () => import('../views/LandingPageView.vue'),
+      meta: { requiresAuth: false }
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
+      meta: { requiresAuth: false }
     },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
-      component: () => import('../views/NotFoundView.vue')
+      component: () => import('../views/NotFoundView.vue'),
+      meta: { requiresAuth: false }
     }
   ],
+})
+
+// Navigation guard to protect routes
+router.beforeEach(async (to, from, next) => {
+  const userStore = useUserStore()
+
+  // Check for stored authentication
+  if (!userStore.isAuthenticated) {
+    await userStore.checkAuth()
+  }
+
+  if (to.meta.requiresAuth && !userStore.isAuthenticated) {
+    next('/login')
+  } else if (to.path === '/login' && userStore.isAuthenticated) {
+    next('/home')
+  } else {
+    next()
+  }
 })
 
 export default router

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { ref, onMounted, onUnmounted, defineAsyncComponent, computed } from 'vue'
 import defaultAvatar from '../assets/default-avatar.svg'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '../stores/userStore'
 
 const DashboardSection = defineAsyncComponent(() => import('../components/DashboardSection.vue'))
 const MatchCards = defineAsyncComponent(() => import('../components/MatchCards.vue'))
@@ -9,10 +10,13 @@ const MatchesSection = defineAsyncComponent(() => import('../components/MatchesS
 const ChatSection = defineAsyncComponent(() => import('../components/ChatSection.vue'))
 
 const router = useRouter()
+const userStore = useUserStore()
 const activeTab = ref('dashboard')
 const isSidebarCollapsed = ref(window.innerWidth < 1024)
 const showNotifications = ref(false)
 const showProfileMenu = ref(false)
+
+const currentUser = computed(() => userStore.currentUser)
 
 const notifications = ref([
   { id: 1, title: 'New Match!', message: 'You have a new match with Sarah Developer', unread: true },
@@ -49,7 +53,7 @@ const navigateToSettings = () => {
 }
 
 const handleLogout = () => {
-  // TODO: Implement logout logic
+  userStore.logout()
   router.push('/login')
 }
 
@@ -150,8 +154,8 @@ onUnmounted(() => {
               <div v-if="showProfileMenu"
                 class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transform opacity-100 scale-100 transition-all duration-200 origin-top-right">
                 <div class="px-4 py-2 border-b border-gray-100">
-                  <p class="text-sm font-medium text-gray-900">John Doe</p>
-                  <p class="text-xs text-gray-500">john.doe@example.com</p>
+                  <p class="text-sm font-medium text-gray-900">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</p>
+                  <p class="text-xs text-gray-500">{{ currentUser?.email }}</p>
                 </div>
                 <div class="py-1">
                   <button @click="navigateToProfile"
@@ -232,8 +236,8 @@ onUnmounted(() => {
                   <div class="flex items-center space-x-3 px-3 py-2">
                     <img :src="defaultAvatar" alt="Profile" class="w-10 h-10 rounded-full" />
                     <div class="flex-1 min-w-0">
-                      <h3 class="text-sm font-medium text-text-primary truncate">John Doe</h3>
-                      <p class="text-xs text-text-secondary truncate">john.doe@example.com</p>
+                      <h3 class="text-sm font-medium text-text-primary truncate">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h3>
+                      <p class="text-xs text-text-secondary truncate">{{ currentUser?.email }}</p>
                     </div>
                   </div>
                 </div>

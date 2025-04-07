@@ -117,7 +117,7 @@ const handleLogin = async () => {
 
   try {
     await userStore.login(loginForm.email, loginForm.password, loginForm.rememberMe)
-    router.push('/dashboard')
+    router.push('/home')
   } catch (error) {
     console.error('Login error:', error)
   }
@@ -135,7 +135,7 @@ const handleRegister = async () => {
       email: registerForm.email,
       password: registerForm.password
     })
-    router.push('/dashboard')
+    router.push('/home')
   } catch (error) {
     console.error('Registration error:', error)
   }

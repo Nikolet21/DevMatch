@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { UserState, UserRegistrationData } from '../interfaces/interfaces'
+import { mockUsers } from '../data/mockData'
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
@@ -23,14 +24,27 @@ export const useUserStore = defineStore('user', {
 
       try {
         await new Promise(resolve => setTimeout(resolve, 1000))
-        this.user = { email }
+        const mockUser = mockUsers.find(user => user.email === email && user.password === password)
+
+        if (!mockUser) {
+          throw new Error('Invalid credentials')
+        }
+
+        this.user = {
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+          email: mockUser.email
+        }
         this.isAuthenticated = true
-        this.token = 'dummy-token'
+        this.token = 'mock-token-' + Date.now()
 
         if (rememberMe) {
           localStorage.setItem('token', this.token)
+          localStorage.setItem('user', JSON.stringify(this.user))
         } else {
           sessionStorage.setItem('token', this.token)
+        sessionStorage.setItem('user', JSON.stringify(this.user))
+          sessionStorage.setItem('user', JSON.stringify(this.user))
         }
       } catch (error) {
         this.error = 'Invalid email or password'
@@ -54,6 +68,7 @@ export const useUserStore = defineStore('user', {
         this.isAuthenticated = true
         this.token = 'dummy-token'
         sessionStorage.setItem('token', this.token)
+        sessionStorage.setItem('user', JSON.stringify(this.user))
       } catch (error) {
         this.error = 'Registration failed. Please try again.'
         throw error
@@ -67,11 +82,26 @@ export const useUserStore = defineStore('user', {
       this.isAuthenticated = false
       this.token = null
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
       sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
     },
 
     clearError() {
       this.error = null
+    },
+
+    async checkAuth() {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+      const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user')
+
+      if (token && storedUser) {
+        this.token = token
+        this.user = JSON.parse(storedUser)
+        this.isAuthenticated = true
+        return true
+      }
+      return false
     }
   }
 })
