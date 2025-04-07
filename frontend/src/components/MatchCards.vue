@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
 import { useMatchStore } from '../stores/matchStore'
+import { useUserStore } from '../stores/userStore'
 
 const props = defineProps<{
   isSidebarCollapsed: boolean
 }>()
 
 const matchStore = useMatchStore()
+const userStore = useUserStore()
 const stackSize = 3 // Number of cards to show in the stack
+
+const hasNoDevelopers = computed(() => matchStore.potentialMatches.length === 0)
 
 const visibleCards = computed(() => {
   const cards = []
   for (let i = 0; i < stackSize; i++) {
     const card = matchStore.potentialMatches[matchStore.currentIndex + i]
-    if (card) {
+    // Skip if the card belongs to the current user
+    if (card && (!userStore.user || card.email !== userStore.user.email)) {
       cards.push({
         ...card,
         name: card.name,
@@ -56,7 +61,16 @@ onMounted(() => {
 <template>
   <div class="fixed top-16 right-0 bottom-0 bg-background flex items-center justify-center" :style="{ left: isSidebarCollapsed ? '4rem' : '16rem' }">
     <div class="relative w-full max-w-2xl h-[calc(100vh-4rem)] flex items-center justify-center">
-    <div class="w-full max-w-lg px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+    <div v-if="hasNoDevelopers" class="text-center px-4 py-6 bg-card rounded-xl shadow-lg max-w-md mx-auto">
+      <div class="mb-4">
+        <svg class="mx-auto h-12 w-12 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h2 class="text-xl font-semibold text-text-primary mb-2">You're All Caught Up!</h2>
+      <p class="text-text-secondary">You've reviewed all available developers. Check back later for new potential matches!</p>
+    </div>
+    <div v-else class="w-full max-w-lg px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <!-- Main Container -->
       <div class="relative flex justify-center w-full max-h-[90vh] aspect-[3/4]">
         <!-- Cards Container -->
@@ -66,7 +80,7 @@ onMounted(() => {
             :style="getCardStyle(index)">
 
             <div class="relative h-[60%] w-full overflow-hidden rounded-t-3xl">
-              <img :src="card.image" :alt="card.name" class="h-full w-full object-cover" />
+              <img :src="card.image" :alt="card.name" class="h-full w-full object-cover object-center" />
               <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
                 <div class="text-white">
                   <h1 class="text-xl font-bold">{{ card.name }}</h1>

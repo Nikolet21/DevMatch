@@ -26,6 +26,7 @@ export interface Chat {
 export interface Developer {
   id: number
   name: string
+  email: string
   avatar: string
   location: string
   skills: string[]

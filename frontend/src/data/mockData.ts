@@ -1,17 +1,45 @@
-import type { Developer, Chat, ChatPartner, ChatMessage, User } from '../interfaces/interfaces'
+import type { Developer, Chat, ChatPartner, ChatMessage, User, UserRegistrationData } from '../interfaces/interfaces'
 import defaultAvatar from '../assets/default-avatar.svg'
+
+export const mockUsers: UserRegistrationData[] = [
+  {
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john.doe@example.com',
+    password: 'password123'
+  },
+  {
+    firstName: 'Alice',
+    lastName: 'Johnson',
+    email: 'alice.johnson@example.com',
+    password: 'password123'
+  },
+  {
+    firstName: 'Bob',
+    lastName: 'Smith',
+    email: 'bob.smith@example.com',
+    password: 'password123'
+  },
+  {
+    firstName: 'Carol',
+    lastName: 'Davis',
+    email: 'carol.davis@example.com',
+    password: 'password123'
+  }
+]
 
 export const currentUser: User = {
   id: 'currentUser',
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john.doe@example.com'
+  firstName: mockUsers[0].firstName,
+  lastName: mockUsers[0].lastName,
+  email: mockUsers[0].email
 }
 
 export const mockDevelopers: Developer[] = [
   {
     id: 1,
     name: 'Alice Johnson',
+    email: 'alice.johnson@example.com',
     avatar: defaultAvatar,
     location: 'San Francisco, CA',
     skills: ['React', 'TypeScript', 'Node.js'],
@@ -22,6 +50,7 @@ export const mockDevelopers: Developer[] = [
   {
     id: 2,
     name: 'Bob Smith',
+    email: 'bob.smith@example.com',
     avatar: defaultAvatar,
     location: 'New York, NY',
     skills: ['Vue.js', 'Python', 'Docker'],
@@ -32,6 +61,7 @@ export const mockDevelopers: Developer[] = [
   {
     id: 3,
     name: 'Carol Davis',
+    email: 'carol.davis@example.com',
     avatar: defaultAvatar,
     location: 'Seattle, WA',
     skills: ['Angular', 'Java', 'Spring Boot'],
