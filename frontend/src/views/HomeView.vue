@@ -2,10 +2,10 @@
 import { ref, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 
-const DashboardSection = defineAsyncComponent(() => import('@/components/DashboardSection.vue'))
-const MatchCards = defineAsyncComponent(() => import('@/components/MatchCards.vue'))
-const MatchesSection = defineAsyncComponent(() => import('@/components/MatchesSection.vue'))
-const ChatSection = defineAsyncComponent(() => import('@/components/ChatSection.vue'))
+const DashboardSection = defineAsyncComponent(() => import('../components/DashboardSection.vue'))
+const MatchCards = defineAsyncComponent(() => import('../components/MatchCards.vue'))
+const MatchesSection = defineAsyncComponent(() => import('../components/MatchesSection.vue'))
+const ChatSection = defineAsyncComponent(() => import('../components/ChatSection.vue'))
 
 const router = useRouter()
 const activeTab = ref('dashboard')
@@ -25,6 +25,10 @@ const navigateToProfile = () => {
 
 const navigateToSettings = () => {
   router.push('/settings')
+}
+
+const updateActiveTab = (newTab: string) => {
+  activeTab.value = newTab
 }
 
 const logout = () => {
@@ -118,9 +122,9 @@ onUnmounted(() => {
                   <font-awesome-icon icon="bars" class="w-5 h-5 flex-shrink-0" />
                   <span v-if="!isSidebarCollapsed" class="truncate">Dashboard</span>
                 </button>
-                <button @click="activeTab = 'match-cards'"
+                <button @click="activeTab = 'browse'"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
-                  :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'match-cards' }">
+                  :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'browse' }">
                   <font-awesome-icon icon="users" class="w-5 h-5 flex-shrink-0" />
                   <span v-if="!isSidebarCollapsed" class="truncate">Find Matches</span>
                 </button>
@@ -150,8 +154,12 @@ onUnmounted(() => {
           <div class="flex-1" :class="{ 'ml-20': isSidebarCollapsed, 'ml-72': !isSidebarCollapsed }">
             <Suspense>
               <template #default>
-                <DashboardSection v-if="activeTab === 'dashboard'" />
-                <MatchCards v-else-if="activeTab === 'match-cards'" />
+                <DashboardSection 
+                  v-if="activeTab === 'dashboard'"
+                  v-model="activeTab"
+                  @update:activeTab="updateActiveTab"
+                />
+                <MatchCards v-else-if="activeTab === 'browse'" :isSidebarCollapsed="isSidebarCollapsed" />
                 <MatchesSection v-else-if="activeTab === 'matches'" />
                 <ChatSection v-else-if="activeTab === 'chats'" />
               </template>
