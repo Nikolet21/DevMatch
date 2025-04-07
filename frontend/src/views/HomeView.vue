@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import defaultAvatar from '../assets/default-avatar.svg'
 import { useRouter } from 'vue-router'
 
 const DashboardSection = defineAsyncComponent(() => import('../components/DashboardSection.vue'))
@@ -10,6 +11,14 @@ const ChatSection = defineAsyncComponent(() => import('../components/ChatSection
 const router = useRouter()
 const activeTab = ref('dashboard')
 const isSidebarCollapsed = ref(window.innerWidth < 1024)
+const showNotifications = ref(false)
+const showProfileMenu = ref(false)
+
+const notifications = ref([
+  { id: 1, title: 'New Match!', message: 'You have a new match with Sarah Developer', unread: true },
+  { id: 2, title: 'Message Received', message: 'John Smith sent you a message', unread: true },
+  { id: 3, title: 'Profile View', message: 'Someone viewed your profile', unread: false }
+])
 
 const handleResize = () => {
   isSidebarCollapsed.value = window.innerWidth < 1024
@@ -19,29 +28,51 @@ const toggleSidebar = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value
 }
 
+const toggleNotifications = () => {
+  showNotifications.value = !showNotifications.value
+  if (showNotifications.value) showProfileMenu.value = false
+}
+
+const toggleProfileMenu = () => {
+  showProfileMenu.value = !showProfileMenu.value
+  if (showProfileMenu.value) showNotifications.value = false
+}
+
 const navigateToProfile = () => {
   router.push('/profile')
+  showProfileMenu.value = false
 }
 
 const navigateToSettings = () => {
   router.push('/settings')
+  showProfileMenu.value = false
+}
+
+const handleLogout = () => {
+  // TODO: Implement logout logic
+  router.push('/login')
 }
 
 const updateActiveTab = (newTab: string) => {
   activeTab.value = newTab
 }
 
-const logout = () => {
-  // TODO: Implement logout logic
-  router.push('/')
+const closeDropdowns = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (!target.closest('.notifications-dropdown') && !target.closest('.profile-dropdown')) {
+    showNotifications.value = false
+    showProfileMenu.value = false
+  }
 }
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+  document.addEventListener('click', closeDropdowns)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  document.removeEventListener('click', closeDropdowns)
 })
 </script>
 
@@ -70,21 +101,74 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="flex items-center space-x-6">
-            <button
-              @click="navigateToProfile"
-              class="group relative rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 transition-all duration-200 hover:scale-105">
-              <span class="sr-only">Profile</span>
-              <font-awesome-icon icon="user" class="h-6 w-6" />
-              <span
-                class="absolute -bottom-8 left-1/2 -translate-x-1/2 transform whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-sm text-white opacity-0 transition-opacity group-hover:opacity-100">Profile</span>
-            </button>
-            <button @click="logout"
-              class="group relative rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 transition-all duration-200 hover:scale-105">
-              <span>Logout</span>
-              <span
-                class="absolute -bottom-8 left-1/2 -translate-x-1/2 transform whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-sm text-white opacity-0 transition-opacity group-hover:opacity-100">Sign
-                Out</span>
-            </button>
+            <div class="relative notifications-dropdown">
+              <button
+                @click="toggleNotifications"
+                class="group relative rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 transition-all duration-200 hover:scale-105">
+                <span class="sr-only">Notifications</span>
+                <font-awesome-icon icon="bell" class="h-6 w-6" />
+                <span class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white"></span>
+              </button>
+              <!-- Notifications Dropdown -->
+              <div v-if="showNotifications"
+                class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50 transform opacity-100 scale-100 transition-all duration-200 origin-top-right">
+                <div class="px-4 py-2 border-b border-gray-100">
+                  <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
+                </div>
+                <div class="max-h-96 overflow-y-auto">
+                  <div v-for="notification in notifications" :key="notification.id"
+                    class="px-4 py-3 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+                    <div class="flex items-start space-x-3">
+                      <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 flex items-center">
+                          {{ notification.title }}
+                          <span v-if="notification.unread"
+                            class="ml-2 h-2 w-2 rounded-full bg-primary"></span>
+                        </p>
+                        <p class="text-sm text-gray-500 mt-0.5">{{ notification.message }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="px-4 py-2 border-t border-gray-100">
+                  <button class="text-sm text-primary hover:text-primary/80 transition-colors duration-200">
+                    Mark all as read
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative profile-dropdown">
+              <button
+                @click="toggleProfileMenu"
+                class="group relative rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 transition-all duration-200 hover:scale-105">
+                <span class="sr-only">Profile</span>
+                <img :src="defaultAvatar" alt="Profile"
+                  class="h-6 w-6 rounded-full" />
+              </button>
+              <!-- Profile Dropdown -->
+              <div v-if="showProfileMenu"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 transform opacity-100 scale-100 transition-all duration-200 origin-top-right">
+                <div class="px-4 py-2 border-b border-gray-100">
+                  <p class="text-sm font-medium text-gray-900">John Doe</p>
+                  <p class="text-xs text-gray-500">john.doe@example.com</p>
+                </div>
+                <div class="py-1">
+                  <button @click="navigateToProfile"
+                    class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                    Your Profile
+                  </button>
+                  <button @click="navigateToSettings"
+                    class="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                    Settings
+                  </button>
+                  <button @click="handleLogout"
+                    class="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-50 transition-colors duration-200">
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </nav>
@@ -109,8 +193,8 @@ onUnmounted(() => {
               </svg>
             </button>
 
-            <div class="p-4 space-y-6">
-              <div class="space-y-1">
+            <div class="flex flex-col h-full p-4">
+              <div class="flex-grow space-y-1">
                 <h2 class="text-lg font-semibold text-text-primary flex items-center space-x-2 mb-4"
                   :class="{ 'justify-center': isSidebarCollapsed }">
                   <font-awesome-icon icon="bolt" class="w-5 h-5 text-primary" />
@@ -140,6 +224,19 @@ onUnmounted(() => {
                   <font-awesome-icon icon="comments" class="w-5 h-5 flex-shrink-0" />
                   <span v-if="!isSidebarCollapsed" class="truncate">Active Chats</span>
                 </button>
+              </div>
+
+              <!-- Profile Info and Settings at Bottom -->
+              <div class="mt-auto space-y-4">
+                <div v-if="!isSidebarCollapsed" class="border-t border-gray-100 pt-4">
+                  <div class="flex items-center space-x-3 px-3 py-2">
+                    <img :src="defaultAvatar" alt="Profile" class="w-10 h-10 rounded-full" />
+                    <div class="flex-1 min-w-0">
+                      <h3 class="text-sm font-medium text-text-primary truncate">John Doe</h3>
+                      <p class="text-xs text-text-secondary truncate">john.doe@example.com</p>
+                    </div>
+                  </div>
+                </div>
                 <button @click="navigateToSettings"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   :class="{ 'justify-center px-2': isSidebarCollapsed }">
@@ -154,7 +251,7 @@ onUnmounted(() => {
           <div class="flex-1" :class="{ 'ml-20': isSidebarCollapsed, 'ml-72': !isSidebarCollapsed }">
             <Suspense>
               <template #default>
-                <DashboardSection 
+                <DashboardSection
                   v-if="activeTab === 'dashboard'"
                   v-model="activeTab"
                   @update:activeTab="updateActiveTab"
