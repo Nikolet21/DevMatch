@@ -1,6 +1,8 @@
 import type { Developer, Chat, ChatPartner, ChatMessage, User, UserRegistrationData } from '../interfaces/interfaces'
 import defaultAvatar from '../assets/default-avatar.svg'
 
+export { defaultAvatar }
+
 export const mockUsers: UserRegistrationData[] = [
   {
     firstName: 'John',

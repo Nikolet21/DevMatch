@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { UserState, UserRegistrationData } from '../interfaces/interfaces'
-import { mockUsers } from '../data/mockData'
+import { mockUsers, mockDevelopers, defaultAvatar } from '../data/mockData'
+import { useProfileStore } from './profileStore'
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
@@ -30,21 +31,49 @@ export const useUserStore = defineStore('user', {
           throw new Error('Invalid credentials')
         }
 
+        // Find the developer data from mockDevelopers
+        const mockDeveloper = mockDevelopers.find(dev => dev.email === email)
+
         this.user = {
           firstName: mockUser.firstName,
           lastName: mockUser.lastName,
-          email: mockUser.email
+          email: mockUser.email,
+          avatar: mockDeveloper?.avatar || defaultAvatar
         }
+
+        // Initialize profile with developer data if available
+        const profileStore = useProfileStore()
+        profileStore.setProfile({
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+          email: mockUser.email,
+          skills: mockDeveloper?.skills || [],
+          bio: mockDeveloper?.bio || '',
+          album: []
+        })
         this.isAuthenticated = true
         this.token = 'mock-token-' + Date.now()
 
         if (rememberMe) {
           localStorage.setItem('token', this.token)
-          localStorage.setItem('user', JSON.stringify(this.user))
+          localStorage.setItem('user', JSON.stringify({
+            ...this.user,
+            profile: {
+              skills: mockDeveloper?.skills || [],
+              bio: mockDeveloper?.bio || '',
+              album: []
+            }
+          }))
         } else {
           sessionStorage.setItem('token', this.token)
-        sessionStorage.setItem('user', JSON.stringify(this.user))
-          sessionStorage.setItem('user', JSON.stringify(this.user))
+          sessionStorage.setItem('user', JSON.stringify({
+            ...this.user,
+            profile: {
+              skills: mockDeveloper?.skills || [],
+              bio: mockDeveloper?.bio || '',
+              album: []
+            }
+          }))
         }
       } catch (error) {
         this.error = 'Invalid email or password'
@@ -60,10 +89,12 @@ export const useUserStore = defineStore('user', {
 
       try {
         await new Promise(resolve => setTimeout(resolve, 1000))
+        const mockDeveloper = mockDevelopers.find(dev => dev.email === userData.email)
         this.user = {
           firstName: userData.firstName,
           lastName: userData.lastName,
-          email: userData.email
+          email: userData.email,
+          avatar: mockDeveloper?.avatar || defaultAvatar
         }
         this.isAuthenticated = true
         this.token = 'dummy-token'
@@ -96,9 +127,37 @@ export const useUserStore = defineStore('user', {
       const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user')
 
       if (token && storedUser) {
+        const userData = JSON.parse(storedUser)
         this.token = token
-        this.user = JSON.parse(storedUser)
+        const mockDeveloper = mockDevelopers.find(dev => dev.email === userData.email)
+        this.user = {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          avatar: mockDeveloper?.avatar || defaultAvatar
+        }
         this.isAuthenticated = true
+
+        // Initialize profile store with stored profile data
+        const profileStore = useProfileStore()
+        profileStore.setProfile({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          skills: userData.profile?.skills || [],
+          bio: userData.profile?.bio || '',
+          album: userData.profile?.album || []
+        })
+
+        // If we have a stored email and developer data, update the profile
+        if (mockDeveloper) {
+          // Update profile with any additional developer data
+          profileStore.updateProfile({
+            skills: mockDeveloper.skills || profileStore.profile?.skills || [],
+            bio: mockDeveloper.bio || profileStore.profile?.bio || ''
+          })
+        }
+
         return true
       }
       return false

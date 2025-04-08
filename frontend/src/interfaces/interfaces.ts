@@ -62,6 +62,36 @@ export interface User {
   firstName?: string
   lastName?: string
   email: string
+  avatar?: string
+}
+
+export interface Profile extends User {
+  skills: string[]
+  bio: string
+  album: AlbumImage[]
+}
+
+export interface AlbumImage {
+  id: string
+  url: string
+  caption: string
+  uploadedAt: Date
+}
+
+export interface ProfileEditForm {
+  firstName: string
+  lastName: string
+  email: string
+  skills: string[]
+  bio: string
+  album: AlbumImage[]
+}
+
+export interface ProfileState {
+  profile: Profile | null
+  isEditing: boolean
+  error: string | null
+  editForm: ProfileEditForm
 }
 
 export interface UserState {
