@@ -1,13 +1,26 @@
 <script setup lang="ts">
 import { useChatStore } from '../stores/chatStore'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const emit = defineEmits<{
   (e: 'update:activeTab', value: string): void
 }>()
 
 const chatStore = useChatStore()
-const sortedChats = computed(() => chatStore.sortedChats)
+const searchQuery = ref('')
+
+const filteredChats = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim()
+  if (!query) return chatStore.sortedChats
+
+  return chatStore.sortedChats.filter(chat => {
+    const partner = chatStore.getChatPartner(chat.id)
+    const lastMessage = chat.lastMessage?.content.toLowerCase() || ''
+    const partnerName = partner?.name.toLowerCase() || ''
+
+    return partnerName.includes(query) || lastMessage.includes(query)
+  })
+})
 
 function formatTimestamp(date: Date): string {
   const now = new Date()
@@ -34,12 +47,16 @@ function selectChat(chatId: string) {
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-text-primary">Active Chats</h1>
       <div class="relative">
-        <input type="text" placeholder="Search conversations..."
-          class="w-64 rounded-lg border-gray-200 bg-white/50 px-4 py-2 text-sm focus:border-primary focus:ring-primary" />
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search conversations..."
+          class="w-64 rounded-lg border-gray-200 bg-white/50 px-4 py-2 text-sm focus:border-primary focus:ring-primary"
+        />
       </div>
     </div>
 
-    <div v-if="sortedChats.length === 0" class="text-center py-16 bg-white/50 backdrop-blur-sm rounded-2xl border border-primary/5">
+    <div v-if="filteredChats.length === 0" class="text-center py-16 bg-white/50 backdrop-blur-sm rounded-2xl border border-primary/5">
       <div class="flex flex-col items-center space-y-4">
         <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
           <svg class="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
@@ -53,7 +70,7 @@ function selectChat(chatId: string) {
     </div>
 
     <div v-else class="space-y-4">
-      <div v-for="chat in sortedChats" :key="chat.id"
+      <div v-for="chat in filteredChats" :key="chat.id"
         @click="selectChat(chat.id)"
         class="group bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-lg hover:border-primary/20 transition-all duration-200 cursor-pointer">
         <div class="flex items-center justify-between">

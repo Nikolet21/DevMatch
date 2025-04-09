@@ -8,6 +8,7 @@ const DashboardSection = defineAsyncComponent(() => import('../components/Dashbo
 const MatchCards = defineAsyncComponent(() => import('../components/MatchCards.vue'))
 const MatchesSection = defineAsyncComponent(() => import('../components/MatchesSection.vue'))
 const ChatSection = defineAsyncComponent(() => import('../components/ChatSection.vue'))
+const ChatRoom = defineAsyncComponent(() => import('../components/ChatRoom.vue'))
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -255,14 +256,19 @@ onUnmounted(() => {
           <div class="flex-1" :class="{ 'ml-20': isSidebarCollapsed, 'ml-72': !isSidebarCollapsed }">
             <Suspense>
               <template #default>
-                <DashboardSection
-                  v-if="activeTab === 'dashboard'"
-                  v-model="activeTab"
-                  @update:activeTab="updateActiveTab"
-                />
-                <MatchCards v-else-if="activeTab === 'browse'" :isSidebarCollapsed="isSidebarCollapsed" />
-                <MatchesSection v-else-if="activeTab === 'matches'" />
-                <ChatSection v-else-if="activeTab === 'chats'" />
+                <div v-if="activeTab === 'chats'" class="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-[1600px] mx-auto">
+                  <ChatSection v-model:activeTab="activeTab" />
+                  <ChatRoom />
+                </div>
+                <template v-else>
+                  <DashboardSection
+                    v-if="activeTab === 'dashboard'"
+                    v-model="activeTab"
+                    @update:activeTab="updateActiveTab"
+                  />
+                  <MatchCards v-else-if="activeTab === 'browse'" :isSidebarCollapsed="isSidebarCollapsed" />
+                  <MatchesSection v-else-if="activeTab === 'matches'" />
+                </template>
               </template>
               <template #fallback>
                 <div class="flex items-center justify-center h-64">
