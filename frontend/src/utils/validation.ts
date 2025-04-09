@@ -3,6 +3,11 @@ export interface ValidationError {
   message: string
 }
 
+export interface ValidationResult {
+  isValid: boolean
+  error?: string
+}
+
 export interface ProfileFormErrors {
   firstName?: string
   lastName?: string
@@ -12,6 +17,124 @@ export interface ProfileFormErrors {
   linkedinUrl?: string
   skills?: string
   general?: string
+}
+
+export const validateEmail = (email: string): ValidationResult => {
+  if (!email) {
+    return {
+      isValid: false,
+      error: 'Email is required'
+    }
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return {
+      isValid: false,
+      error: 'Please enter a valid email address'
+    }
+  }
+
+  return {
+    isValid: true
+  }
+}
+
+export const validatePassword = (password: string): ValidationResult => {
+  if (!password) {
+    return {
+      isValid: false,
+      error: 'Password is required'
+    }
+  }
+
+  if (password.length < 8) {
+    return {
+      isValid: false,
+      error: 'Password must be at least 8 characters long'
+    }
+  }
+
+  const hasUpperCase = /[A-Z]/.test(password)
+  const hasLowerCase = /[a-z]/.test(password)
+  const hasNumbers = /\d/.test(password)
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+
+  if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+    return {
+      isValid: false,
+      error: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+    }
+  }
+
+  return {
+    isValid: true
+  }
+}
+
+export interface SettingsFormErrors {
+  currentPassword?: string
+  newPassword?: string
+  confirmPassword?: string
+  currentEmail?: string
+  newEmail?: string
+  confirmEmail?: string
+  general?: string
+}
+
+export const validateSettingsPasswordForm = (
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+): SettingsFormErrors => {
+  const errors: SettingsFormErrors = {}
+
+  if (!currentPassword) {
+    errors.currentPassword = 'Current password is required'
+  }
+
+  if (!newPassword) {
+    errors.newPassword = 'New password is required'
+  } else {
+    const passwordValidation = validatePassword(newPassword)
+    if (!passwordValidation.isValid) {
+      errors.newPassword = passwordValidation.error
+    }
+  }
+
+  if (!confirmPassword) {
+    errors.confirmPassword = 'Please confirm your new password'
+  } else if (newPassword !== confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match'
+  }
+
+  return errors
+}
+
+export const validateSettingsEmailForm = (
+  currentEmail: string,
+  newEmail: string,
+  confirmEmail: string
+): SettingsFormErrors => {
+  const errors: SettingsFormErrors = {}
+
+  const currentEmailValidation = validateEmail(currentEmail)
+  if (!currentEmailValidation.isValid) {
+    errors.currentEmail = currentEmailValidation.error
+  }
+
+  const newEmailValidation = validateEmail(newEmail)
+  if (!newEmailValidation.isValid) {
+    errors.newEmail = newEmailValidation.error
+  }
+
+  if (!confirmEmail) {
+    errors.confirmEmail = 'Please confirm your new email'
+  } else if (newEmail !== confirmEmail) {
+    errors.confirmEmail = 'Email addresses do not match'
+  }
+
+  return errors
 }
 
 export const validateProfileForm = (form: {
@@ -40,11 +163,9 @@ export const validateProfileForm = (form: {
   }
 
   // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!form.email.trim()) {
-    errors.email = 'Email is required'
-  } else if (!emailRegex.test(form.email)) {
-    errors.email = 'Please enter a valid email address'
+  const emailValidation = validateEmail(form.email)
+  if (!emailValidation.isValid) {
+    errors.email = emailValidation.error
   }
 
   // Bio validation

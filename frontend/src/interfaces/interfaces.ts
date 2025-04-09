@@ -112,3 +112,15 @@ export interface UserRegistrationData {
   email: string
   password: string
 }
+
+export interface SettingsError {
+  password?: string
+  email?: string
+  general?: string
+  currentPassword?: string
+  newPassword?: string
+  confirmPassword?: string
+  currentEmail?: string
+  newEmail?: string
+  confirmEmail?: string
+}
