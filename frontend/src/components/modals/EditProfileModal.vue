@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '../../stores/userStore'
 import { useProfileStore } from '../../stores/profileStore'
 import ImagePreviewModal from './ImagePreviewModal.vue'
+import { validateProfileForm, type ProfileFormErrors } from '../../utils/validation'
 
 const userStore = useUserStore()
 const profileStore = useProfileStore()
@@ -46,9 +47,19 @@ const triggerFileUpload = () => {
   photoUploadInput.value?.click()
 }
 
+const skillError = ref('')
+
 const addSkill = () => {
-  if (newSkill.value.trim() && !profileStore.editForm.skills.includes(newSkill.value.trim())) {
-    profileStore.editForm.skills.push(newSkill.value.trim())
+  skillError.value = ''
+  const trimmedSkill = newSkill.value.trim()
+
+  if (!trimmedSkill) {
+    skillError.value = 'Skill cannot be empty'
+    return
+  }
+
+  if (!profileStore.editForm.skills.includes(trimmedSkill)) {
+    profileStore.editForm.skills.push(trimmedSkill)
     newSkill.value = ''
   }
 }
@@ -57,7 +68,19 @@ const removeSkill = (skill: string) => {
   profileStore.editForm.skills = profileStore.editForm.skills.filter(s => s !== skill)
 }
 
+const formErrors = ref<ProfileFormErrors>({})
+
 const saveProfile = async () => {
+  // Reset previous errors
+  formErrors.value = {}
+
+  // Validate form
+  const errors = validateProfileForm(profileStore.editForm)
+  if (Object.keys(errors).length > 0) {
+    formErrors.value = errors
+    return
+  }
+
   try {
     const updatedProfile = {
       firstName: profileStore.editForm.firstName,
@@ -65,7 +88,9 @@ const saveProfile = async () => {
       email: profileStore.editForm.email,
       skills: profileStore.editForm.skills,
       bio: profileStore.editForm.bio,
-      album: profileStore.editForm.album
+      album: profileStore.editForm.album,
+      githubUrl: profileStore.editForm.githubUrl,
+      linkedinUrl: profileStore.editForm.linkedinUrl
     }
 
     await profileStore.updateProfile(updatedProfile)
@@ -80,14 +105,15 @@ const saveProfile = async () => {
     emit('close')
   } catch (error) {
     console.error('Failed to update profile:', error)
+    formErrors.value.general = 'Failed to update profile. Please try again.'
   }
 }
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-      <div class="p-6">
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-white/20">
+      <div class="p-8">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-gray-900">Edit Profile</h2>
           <button
@@ -100,18 +126,18 @@ const saveProfile = async () => {
           </button>
         </div>
 
-        <form @submit.prevent="saveProfile" class="space-y-6">
+        <form @submit.prevent="saveProfile" class="space-y-8">
           <!-- Name Fields -->
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 bg-white/50 p-6 rounded-xl shadow-sm">
             <div>
               <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
               <input
                 type="text"
                 id="firstName"
                 v-model="profileStore.editForm.firstName"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                required
+                class="mt-2 block w-full rounded-xl border-0 px-4 py-3 bg-gray-50/50 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all duration-200 hover:bg-gray-50"
               />
+              <p v-if="formErrors.firstName" class="mt-1 text-sm text-red-600">{{ formErrors.firstName }}</p>
             </div>
 
             <div>
@@ -120,9 +146,9 @@ const saveProfile = async () => {
                 type="text"
                 id="lastName"
                 v-model="profileStore.editForm.lastName"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                required
+                class="mt-2 block w-full rounded-xl border-0 px-4 py-3 bg-gray-50/50 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all duration-200 hover:bg-gray-50"
               />
+              <p v-if="formErrors.lastName" class="mt-1 text-sm text-red-600">{{ formErrors.lastName }}</p>
             </div>
           </div>
 
@@ -133,10 +159,11 @@ const saveProfile = async () => {
               type="email"
               id="email"
               v-model="profileStore.editForm.email"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              required
+              class="mt-2 block w-full rounded-xl border-0 px-4 py-3 bg-gray-50/50 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all duration-200 hover:bg-gray-50 cursor-not-allowed"
               :disabled="true"
             />
+            <p class="mt-1 text-sm text-gray-500">Email address cannot be edited</p>
+            <p v-if="formErrors.email" class="mt-1 text-sm text-red-600">{{ formErrors.email }}</p>
           </div>
 
           <!-- Bio Field -->
@@ -146,13 +173,40 @@ const saveProfile = async () => {
               id="bio"
               v-model="profileStore.editForm.bio"
               rows="4"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              class="mt-2 block w-full rounded-xl border-0 px-4 py-3 bg-gray-50/50 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all duration-200 hover:bg-gray-50"
             ></textarea>
+            <p v-if="formErrors.bio" class="mt-1 text-sm text-red-600">{{ formErrors.bio }}</p>
+          </div>
+
+          <!-- Social Links -->
+          <div class="space-y-4 bg-white/50 p-6 rounded-xl shadow-sm">
+            <div>
+              <label for="githubUrl" class="block text-sm font-medium text-gray-700">GitHub Profile URL</label>
+              <input
+                type="url"
+                id="githubUrl"
+                v-model="profileStore.editForm.githubUrl"
+                placeholder="https://github.com/username"
+                class="mt-2 block w-full rounded-xl border-0 px-4 py-3 bg-gray-50/50 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all duration-200 hover:bg-gray-50"
+              />
+              <p v-if="formErrors.githubUrl" class="mt-1 text-sm text-red-600">{{ formErrors.githubUrl }}</p>
+            </div>
+            <div>
+              <label for="linkedinUrl" class="block text-sm font-medium text-gray-700">LinkedIn Profile URL</label>
+              <input
+                type="url"
+                id="linkedinUrl"
+                v-model="profileStore.editForm.linkedinUrl"
+                placeholder="https://linkedin.com/in/username"
+                class="mt-2 block w-full rounded-xl border-0 px-4 py-3 bg-gray-50/50 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all duration-200 hover:bg-gray-50"
+              />
+              <p v-if="formErrors.linkedinUrl" class="mt-1 text-sm text-red-600">{{ formErrors.linkedinUrl }}</p>
+            </div>
           </div>
 
         <!-- Skills -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Skills</label>
+        <div class="bg-white/50 p-6 rounded-xl shadow-sm">
+          <label class="block text-sm font-semibold text-gray-900 mb-3">Skills</label>
           <div class="flex flex-wrap gap-2 mb-3">
             <span
               v-for="skill in profileStore.editForm.skills"
@@ -170,13 +224,16 @@ const saveProfile = async () => {
             </span>
           </div>
           <div class="flex gap-2">
-            <input
-              type="text"
-              v-model="newSkill"
-              placeholder="Add a skill"
-              class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              @keyup.enter.prevent="addSkill"
-            />
+            <div class="flex-1">
+              <input
+                type="text"
+                v-model="newSkill"
+                placeholder="Add a skill"
+                class="w-full rounded-xl border-0 px-4 py-3 bg-gray-50/50 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all duration-200 hover:bg-gray-50"
+                @keyup.enter.prevent="addSkill"
+              />
+              <p v-if="skillError" class="mt-1 text-sm text-red-600">{{ skillError }}</p>
+            </div>
             <button
               type="button"
               @click="addSkill"
@@ -188,8 +245,8 @@ const saveProfile = async () => {
         </div>
 
         <!-- Photo Album -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Photo Album</label>
+        <div class="bg-white/50 p-6 rounded-xl shadow-sm">
+          <label class="block text-sm font-semibold text-gray-900 mb-3">Photo Album</label>
           <div class="grid grid-cols-2 gap-4">
             <div
               v-for="image in profileStore.editForm.album"
@@ -256,7 +313,7 @@ const saveProfile = async () => {
           </button>
           <button
             type="submit"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Save Changes
           </button>
