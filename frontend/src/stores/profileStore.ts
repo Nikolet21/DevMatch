@@ -15,7 +15,9 @@ export const useProfileStore = defineStore('profile', {
       email: '',
       skills: [],
       bio: '',
-      album: []
+      album: [],
+      githubUrl: '',
+      linkedinUrl: ''
     }
   }),
 
@@ -46,6 +48,8 @@ export const useProfileStore = defineStore('profile', {
         this.profile = {
           ...this.profile,
           ...updatedProfile,
+          githubUrl: updatedProfile.githubUrl,
+          linkedinUrl: updatedProfile.linkedinUrl,
           avatar: userStore.user?.avatar || defaultAvatar
         } as Profile
         this.error = null
@@ -59,6 +63,8 @@ export const useProfileStore = defineStore('profile', {
       const userStore = useUserStore()
       this.profile = {
         ...newProfile,
+        githubUrl: newProfile.githubUrl || '',
+        linkedinUrl: newProfile.linkedinUrl || '',
         avatar: userStore.user?.avatar || defaultAvatar
       }
     },
@@ -72,7 +78,9 @@ export const useProfileStore = defineStore('profile', {
           email: this.profile?.email || '',
           skills: this.profile?.skills || [],
           bio: this.profile?.bio || '',
-          album: this.profile?.album || []
+          album: this.profile?.album || [],
+          githubUrl: this.profile?.githubUrl || '',
+          linkedinUrl: this.profile?.linkedinUrl || ''
         }
       }
     },
@@ -94,7 +102,9 @@ export const useProfileStore = defineStore('profile', {
         email: this.profile?.email || '',
         skills: this.profile?.skills || [],
         bio: this.profile?.bio || '',
-        album: this.profile?.album || []
+        album: this.profile?.album || [],
+        githubUrl: this.profile?.githubUrl || '',
+        linkedinUrl: this.profile?.linkedinUrl || ''
       }
       this.isEditing = false
     },

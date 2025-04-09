@@ -69,6 +69,8 @@ export interface Profile extends User {
   skills: string[]
   bio: string
   album: AlbumImage[]
+  githubUrl?: string
+  linkedinUrl?: string
 }
 
 export interface AlbumImage {
@@ -85,6 +87,8 @@ export interface ProfileEditForm {
   skills: string[]
   bio: string
   album: AlbumImage[]
+  githubUrl?: string
+  linkedinUrl?: string
 }
 
 export interface ProfileState {

@@ -19,6 +19,25 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
+    async updateAvatar(avatarUrl: string) {
+      try {
+        // TODO: Implement API call to update avatar
+        if (this.user) {
+          this.user = {
+            ...this.user,
+            avatar: avatarUrl
+          }
+          // Update storage to persist avatar change
+          const storage = localStorage.getItem('token') ? localStorage : sessionStorage
+          const userData = JSON.parse(storage.getItem('user') || '{}')
+          storage.setItem('user', JSON.stringify({ ...userData, avatar: avatarUrl }))
+        }
+      } catch (error) {
+        this.error = 'Failed to update avatar'
+        throw error
+      }
+    },
+
     async login(email: string, password: string, rememberMe: boolean = false) {
       this.loading = true
       this.error = null
@@ -49,6 +68,8 @@ export const useUserStore = defineStore('user', {
           email: mockUser.email,
           skills: mockDeveloper?.skills || [],
           bio: mockDeveloper?.bio || '',
+          githubUrl: mockDeveloper?.githubUrl,
+          linkedinUrl: mockDeveloper?.linkedinUrl,
           album: []
         })
         this.isAuthenticated = true
@@ -154,7 +175,9 @@ export const useUserStore = defineStore('user', {
           // Update profile with any additional developer data
           profileStore.updateProfile({
             skills: mockDeveloper.skills || profileStore.profile?.skills || [],
-            bio: mockDeveloper.bio || profileStore.profile?.bio || ''
+            bio: mockDeveloper.bio || profileStore.profile?.bio || '',
+            githubUrl: mockDeveloper.githubUrl || profileStore.profile?.githubUrl || '',
+            linkedinUrl: mockDeveloper.linkedinUrl || profileStore.profile?.linkedinUrl || ''
           })
         }
 
