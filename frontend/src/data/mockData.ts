@@ -1,5 +1,8 @@
 import type { Developer, Chat, ChatPartner, ChatMessage, User, UserRegistrationData } from '../interfaces/interfaces'
 import defaultAvatar from '../assets/default-avatar.svg'
+import developerProfiles from '../assets/developer-profiles.svg'
+import matchingFunctionality from '../assets/matching-functionality.svg'
+import messagingSystem from '../assets/messaging-system.svg'
 
 export { defaultAvatar }
 
@@ -47,7 +50,27 @@ export const mockDevelopers: Developer[] = [
     skills: ['React', 'TypeScript', 'Node.js'],
     bio: 'Full-stack developer with 5 years of experience in web development.',
     githubUrl: 'https://github.com/alice',
-    linkedinUrl: 'https://linkedin.com/in/alice'
+    linkedinUrl: 'https://linkedin.com/in/alice',
+    album: [
+      {
+        id: '1',
+        url: developerProfiles,
+        caption: 'A modern dashboard built with React and TypeScript',
+        uploadedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      },
+      {
+        id: '2',
+        url: matchingFunctionality,
+        caption: 'UI/UX design for a fitness tracking app',
+        uploadedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      },
+      {
+        id: '3',
+        url: messagingSystem,
+        caption: 'System design diagram for a microservices architecture',
+        uploadedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      }
+    ]
   },
   {
     id: 2,
@@ -58,7 +81,27 @@ export const mockDevelopers: Developer[] = [
     skills: ['Vue.js', 'Python', 'Docker'],
     bio: 'Backend developer passionate about cloud architecture and DevOps.',
     githubUrl: 'https://github.com/bob',
-    linkedinUrl: 'https://linkedin.com/in/bob'
+    linkedinUrl: 'https://linkedin.com/in/bob',
+    album: [
+      {
+        id: '4',
+        url: developerProfiles,
+        caption: 'Cloud architecture diagram for a scalable microservices platform',
+        uploadedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
+      },
+      {
+        id: '5',
+        url: matchingFunctionality,
+        caption: 'DevOps pipeline visualization for continuous deployment',
+        uploadedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000)
+      },
+      {
+        id: '6',
+        url: messagingSystem,
+        caption: 'Docker container orchestration setup for a Vue.js application',
+        uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+      }
+    ]
   },
   {
     id: 3,
@@ -69,7 +112,27 @@ export const mockDevelopers: Developer[] = [
     skills: ['Angular', 'Java', 'Spring Boot'],
     bio: 'Senior software engineer specializing in enterprise applications.',
     githubUrl: 'https://github.com/carol',
-    linkedinUrl: 'https://linkedin.com/in/carol'
+    linkedinUrl: 'https://linkedin.com/in/carol',
+    album: [
+      {
+        id: '7',
+        url: developerProfiles,
+        caption: 'Enterprise Java application architecture overview',
+        uploadedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+      },
+      {
+        id: '8',
+        url: matchingFunctionality,
+        caption: 'Angular-based dashboard for monitoring Spring Boot services',
+        uploadedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      },
+      {
+        id: '9',
+        url: messagingSystem,
+        caption: 'System integration diagram for a distributed enterprise system',
+        uploadedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      }
+    ]
   }
 ]
 

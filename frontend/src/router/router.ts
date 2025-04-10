@@ -23,6 +23,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/developer/:id',
+      name: 'developer-profile',
+      component: () => import('../views/DeveloperProfileView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/',
       name: 'DevMatch',
       component: () => import('../views/LandingPageView.vue'),

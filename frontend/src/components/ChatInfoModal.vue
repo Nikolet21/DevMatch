@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue'
+import { useRouter } from 'vue-router'
+import type { ChatPartner } from '../interfaces/interfaces'
 
-defineProps<{
+const router = useRouter()
+
+const props = defineProps<{
   isOpen: boolean
-  chatPartner: {
-    id: string
-    name: string
-    avatar?: string
-    isOnline: boolean
-    role?: string
-    location?: string
-    joinedDate?: Date
-  } | null
+  chatPartner: ChatPartner | null
 }>()
 
 const emit = defineEmits<{
@@ -23,7 +19,12 @@ function closeModal() {
 }
 
 function handleAction(action: string) {
-  alert(`Action: ${action}`)
+  if (action === 'viewProfile' && props.chatPartner?.id) {
+    router.push(`/developer/${props.chatPartner.id}`)
+    closeModal()
+  } else {
+    alert(`Action: ${action}`)
+  }
 }
 </script>
 

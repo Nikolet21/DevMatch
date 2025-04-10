@@ -33,6 +33,14 @@ export interface Developer {
   bio: string
   githubUrl?: string
   linkedinUrl?: string
+  album?: AlbumImage[]
+}
+
+export interface AlbumImage {
+  id: string
+  url: string
+  caption: string
+  uploadedAt: Date
 }
 
 export interface Match {
@@ -73,12 +81,6 @@ export interface Profile extends User {
   linkedinUrl?: string
 }
 
-export interface AlbumImage {
-  id: string
-  url: string
-  caption: string
-  uploadedAt: Date
-}
 
 export interface ProfileEditForm {
   firstName: string
