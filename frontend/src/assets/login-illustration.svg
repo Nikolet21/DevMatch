@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <!-- Background Elements -->
+  <path d="M50,300 Q200,100 400,300 T750,300" stroke="#6366F1" stroke-width="2" opacity="0.1"/>
+  <path d="M50,320 Q200,120 400,320 T750,320" stroke="#6366F1" stroke-width="2" opacity="0.1"/>
+  <path d="M50,340 Q200,140 400,340 T750,340" stroke="#6366F1" stroke-width="2" opacity="0.1"/>
+  
+  <!-- Code Window -->
+  <rect x="150" y="100" width="300" height="200" rx="10" fill="#1E293B"/>
+  <rect x="150" y="100" width="300" height="30" rx="10" fill="#334155"/>
+  <circle cx="170" cy="115" r="5" fill="#EF4444"/>
+  <circle cx="190" cy="115" r="5" fill="#F59E0B"/>
+  <circle cx="210" cy="115" r="5" fill="#10B981"/>
+  
+  <!-- Code Lines -->
+  <rect x="170" y="150" width="120" height="10" rx="2" fill="#6366F1" opacity="0.6"/>
+  <rect x="170" y="170" width="200" height="10" rx="2" fill="#6366F1" opacity="0.4"/>
+  <rect x="170" y="190" width="160" height="10" rx="2" fill="#6366F1" opacity="0.6"/>
+  <rect x="170" y="210" width="180" height="10" rx="2" fill="#6366F1" opacity="0.4"/>
+  <rect x="170" y="230" width="140" height="10" rx="2" fill="#6366F1" opacity="0.6"/>
+  
+  <!-- Connected Dots -->
+  <circle cx="550" cy="150" r="5" fill="#6366F1"/>
+  <circle cx="600" cy="200" r="5" fill="#6366F1"/>
+  <circle cx="650" cy="250" r="5" fill="#6366F1"/>
+  <line x1="550" y1="150" x2="600" y2="200" stroke="#6366F1" stroke-width="2" opacity="0.5"/>
+  <line x1="600" y1="200" x2="650" y2="250" stroke="#6366F1" stroke-width="2" opacity="0.5"/>
+  
+  <!-- Abstract Shapes -->
+  <path d="M500,400 L550,350 L600,400 L550,450 Z" fill="#6366F1" opacity="0.2"/>
+  <circle cx="200" cy="450" r="30" fill="#6366F1" opacity="0.2"/>
+  <rect x="600" y="400" width="50" height="50" rx="10" fill="#6366F1" opacity="0.2"/>
+</svg>

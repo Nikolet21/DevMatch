@@ -1,0 +1,42 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Elements -->
+  <circle cx="400" cy="300" r="250" fill="#F3F4F6" opacity="0.5"/>
+  <circle cx="400" cy="300" r="200" fill="#E5E7EB" opacity="0.3"/>
+  
+  <!-- Code Window Left -->
+  <rect x="100" y="150" width="250" height="300" rx="8" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/>
+  <rect x="100" y="150" width="250" height="30" rx="8" fill="#F3F4F6"/>
+  <circle cx="120" cy="165" r="4" fill="#EF4444"/>
+  <circle cx="135" cy="165" r="4" fill="#F59E0B"/>
+  <circle cx="150" cy="165" r="4" fill="#10B981"/>
+  
+  <!-- Code Lines Left -->
+  <rect x="120" y="200" width="180" height="8" rx="4" fill="#5C6AC4" opacity="0.6"/>
+  <rect x="120" y="220" width="140" height="8" rx="4" fill="#9C6ADE" opacity="0.4"/>
+  <rect x="120" y="240" width="160" height="8" rx="4" fill="#5C6AC4" opacity="0.6"/>
+  <rect x="120" y="260" width="120" height="8" rx="4" fill="#9C6ADE" opacity="0.4"/>
+  
+  <!-- Code Window Right -->
+  <rect x="450" y="150" width="250" height="300" rx="8" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/>
+  <rect x="450" y="150" width="250" height="30" rx="8" fill="#F3F4F6"/>
+  <circle cx="470" cy="165" r="4" fill="#EF4444"/>
+  <circle cx="485" cy="165" r="4" fill="#F59E0B"/>
+  <circle cx="500" cy="165" r="4" fill="#10B981"/>
+  
+  <!-- Code Lines Right -->
+  <rect x="470" y="200" width="180" height="8" rx="4" fill="#5C6AC4" opacity="0.6"/>
+  <rect x="470" y="220" width="140" height="8" rx="4" fill="#9C6ADE" opacity="0.4"/>
+  <rect x="470" y="240" width="160" height="8" rx="4" fill="#5C6AC4" opacity="0.6"/>
+  <rect x="470" y="260" width="120" height="8" rx="4" fill="#9C6ADE" opacity="0.4"/>
+  
+  <!-- Connection Lines -->
+  <path d="M 350 300 C 400 300, 400 300, 450 300" stroke="#5C6AC4" stroke-width="3" stroke-dasharray="6 6"/>
+  <circle cx="350" cy="300" r="6" fill="#5C6AC4"/>
+  <circle cx="450" cy="300" r="6" fill="#5C6AC4"/>
+  
+  <!-- Floating Elements -->
+  <circle cx="250" cy="100" r="20" fill="#5C6AC4" opacity="0.1"/>
+  <circle cx="550" cy="500" r="30" fill="#9C6ADE" opacity="0.1"/>
+  <circle cx="150" cy="450" r="25" fill="#5C6AC4" opacity="0.1"/>
+  <circle cx="650" cy="150" r="15" fill="#9C6ADE" opacity="0.1"/>
+</svg>
