@@ -8,9 +8,9 @@ export { defaultAvatar }
 
 export const mockUsers: UserRegistrationData[] = [
   {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
+    firstName: 'Nicole Keith',
+    lastName: 'Inot',
+    email: 'nicole.inot@example.com',
     password: 'password123'
   },
   {
@@ -133,6 +133,101 @@ export const mockDevelopers: Developer[] = [
         uploadedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
       }
     ]
+  },
+  {
+    id: 4,
+    name: 'David Kim',
+    email: 'david.kim@example.com',
+    avatar: defaultAvatar,
+    location: 'Austin, TX',
+    skills: ['React Native', 'Swift', 'Kotlin'],
+    bio: 'Mobile app developer specializing in cross-platform development.',
+    githubUrl: 'https://github.com/davidkim',
+    linkedinUrl: 'https://linkedin.com/in/davidkim',
+    album: [
+      {
+        id: '10',
+        url: developerProfiles,
+        caption: 'Cross-platform mobile app showcase',
+        uploadedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+      }
+    ]
+  },
+  {
+    id: 5,
+    name: 'Emma Wilson',
+    email: 'emma.wilson@example.com',
+    avatar: defaultAvatar,
+    location: 'Portland, OR',
+    skills: ['Svelte', 'GraphQL', 'PostgreSQL'],
+    bio: 'Full-stack developer passionate about modern web technologies.',
+    githubUrl: 'https://github.com/emmaw',
+    linkedinUrl: 'https://linkedin.com/in/emmawilson',
+    album: [
+      {
+        id: '11',
+        url: developerProfiles,
+        caption: 'Real-time data visualization dashboard',
+        uploadedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000)
+      }
+    ]
+  },
+  {
+    id: 6,
+    name: 'Frank Chen',
+    email: 'frank.chen@example.com',
+    avatar: defaultAvatar,
+    location: 'Boston, MA',
+    skills: ['Ruby on Rails', 'Redis', 'AWS'],
+    bio: 'Backend developer focused on scalable cloud solutions.',
+    githubUrl: 'https://github.com/frankc',
+    linkedinUrl: 'https://linkedin.com/in/frankchen',
+    album: [
+      {
+        id: '12',
+        url: developerProfiles,
+        caption: 'High-performance caching system architecture',
+        uploadedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
+      }
+    ]
+  },
+  {
+    id: 7,
+    name: 'Grace Lee',
+    email: 'grace.lee@example.com',
+    avatar: defaultAvatar,
+    location: 'Chicago, IL',
+    skills: ['Unity', 'C#', 'WebGL'],
+    bio: 'Game developer with expertise in 3D graphics and physics engines.',
+    githubUrl: 'https://github.com/gracelee',
+    linkedinUrl: 'https://linkedin.com/in/gracel',
+    album: [
+      {
+        id: '13',
+        url: developerProfiles,
+        caption: '3D game development portfolio',
+        uploadedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000)
+      }
+    ]
+  },
+  {
+    id: 8,
+    name: 'Henry Martinez',
+    email: 'henry.martinez@example.com',
+    avatar: defaultAvatar,
+    location: 'Miami, FL',
+    skills: ['Solidity', 'Web3.js', 'Ethereum'],
+    bio: 'Blockchain developer specializing in smart contracts and DeFi applications.',
+    githubUrl: 'https://github.com/henrym',
+    linkedinUrl: 'https://linkedin.com/in/henrymartinez',
+    album: [
+      {
+        id: '14',
+        url: developerProfiles,
+        caption: 'Decentralized finance application architecture',
+        uploadedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
+      }
+    ]
   }
 ]
 
@@ -167,6 +262,27 @@ const getDeveloperName = (id: string): string => {
   const devId = parseInt(id.replace('dev', ''))
   return mockDevelopers.find(dev => dev.id === devId)?.name || 'Unknown User'
 }
+
+export const mockMatches = [
+  {
+    id: 1,
+    developerId: 1,
+    status: 'accepted',
+    matchedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: 2,
+    developerId: 2,
+    status: 'pending',
+    matchedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: 3,
+    developerId: 3,
+    status: 'accepted',
+    matchedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+  }
+]
 
 export const mockChats: Chat[] = [
   {
