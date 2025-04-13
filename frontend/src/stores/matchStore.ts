@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { Developer, Match, MatchState } from '../interfaces/interfaces'
 import { mockDevelopers, mockMatches } from '../data/mockData'
+import { useChatStore } from './chatStore'
 
 export const useMatchStore = defineStore('match', {
   state: (): MatchState => ({
@@ -57,15 +58,25 @@ export const useMatchStore = defineStore('match', {
         const developer = this.potentialMatches[this.currentIndex]
         if (!developer) return
 
-        const newMatch: Match = {
-          id: Date.now(),
-          developer: developer,
-          status: 'pending',
-          matchedAt: new Date()
-        }
+        // Check if there's a pending match from the other developer
+        const existingMatch = this.matches.find(
+          m => m.developer.id === developer.id && m.status === 'pending'
+        )
 
-        this.matches.push(newMatch)
-        this.stats.likesSent++
+        if (existingMatch) {
+          // If there's a pending match, it means mutual like - auto accept
+          await this.updateMatchStatus(existingMatch.id, 'accepted')
+        } else {
+          // Create new pending match
+          const newMatch: Match = {
+            id: Date.now(),
+            developer: developer,
+            status: 'pending',
+            matchedAt: new Date()
+          }
+          this.matches.push(newMatch)
+          this.stats.likesSent++
+        }
 
         this.moveToNextDeveloper()
       } catch (error) {
@@ -153,6 +164,9 @@ export const useMatchStore = defineStore('match', {
           match.status = status
           if (status === 'accepted') {
             this.stats.totalMatches++
+            // Initialize chat when match is accepted
+            const chatStore = useChatStore()
+            await chatStore.initializeChat(match.developer.id.toString())
           }
         }
       } catch (error) {
