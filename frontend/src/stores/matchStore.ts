@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import type { Developer, Match, MatchState } from '../interfaces/interfaces'
-import { mockDevelopers } from '../data/mockData'
-
+import { mockDevelopers, mockMatches } from '../data/mockData'
 
 export const useMatchStore = defineStore('match', {
   state: (): MatchState => ({
@@ -35,8 +34,16 @@ export const useMatchStore = defineStore('match', {
       this.isLoading = true
       this.error = null
       try {
-        // Use mock data from mockData.ts for development
-        this.potentialMatches = mockDevelopers
+        const processedDeveloperIds = this.matches.map(match => match.developer.id)
+
+        const availableDevelopers = mockDevelopers.filter(dev =>
+          !processedDeveloperIds.includes(dev.id) &&
+          !this.potentialMatches.some(match => match.id === dev.id)
+        )
+
+        const shuffledDevelopers = [...availableDevelopers].sort(() => Math.random() - 0.5)
+
+        this.potentialMatches = [...this.potentialMatches, ...shuffledDevelopers]
       } catch (error) {
         this.error = 'Failed to fetch potential matches'
         console.error(error)
@@ -47,8 +54,19 @@ export const useMatchStore = defineStore('match', {
 
     async likeDeveloper(developerId: number) {
       try {
-        // Mock API call for development
+        const developer = this.potentialMatches[this.currentIndex]
+        if (!developer) return
+
+        const newMatch: Match = {
+          id: Date.now(),
+          developer: developer,
+          status: 'pending',
+          matchedAt: new Date()
+        }
+
+        this.matches.push(newMatch)
         this.stats.likesSent++
+
         this.moveToNextDeveloper()
       } catch (error) {
         this.error = 'Failed to like developer'
@@ -58,7 +76,17 @@ export const useMatchStore = defineStore('match', {
 
     async passDeveloper(developerId: number) {
       try {
-        // Mock API call for development
+        const developer = this.potentialMatches[this.currentIndex]
+        if (!developer) return
+
+        const newMatch: Match = {
+          id: Date.now(),
+          developer: developer,
+          status: 'rejected',
+          matchedAt: new Date()
+        }
+
+        this.matches.push(newMatch)
         this.moveToNextDeveloper()
       } catch (error) {
         this.error = 'Failed to pass developer'
@@ -67,27 +95,47 @@ export const useMatchStore = defineStore('match', {
     },
 
     moveToNextDeveloper() {
-      // Remove the current card from potential matches
-      this.potentialMatches.splice(this.currentIndex, 1)
+      if (this.currentIndex < this.potentialMatches.length) {
+        this.potentialMatches.splice(this.currentIndex, 1)
 
-      // If we don't have enough cards left, fetch more
-      if (this.potentialMatches.length < 3) {
-        this.fetchPotentialMatches()
+        if (this.potentialMatches.length < 5) {
+          this.fetchPotentialMatches()
+        }
+
+        this.currentIndex = 0
       }
     },
 
     async fetchMatches() {
+      if (this.isLoading) return
+
       this.isLoading = true
       this.error = null
       try {
-        // TODO: Replace with actual API call
-        const response = await fetch('/api/matches')
-        const data = await response.json()
-        this.matches = data
+        // mock data atm
+        const mappedMatches: Match[] = mockMatches.map(match => {
+          const developer = mockDevelopers.find(dev => dev.id === match.developerId) || {
+            id: match.developerId,
+            name: 'Unknown Developer',
+            email: '',
+            avatar: '/default-avatar.png',
+            location: 'Unknown Location',
+            skills: [],
+            bio: 'No bio available'
+          }
+          return {
+            id: match.id,
+            developer,
+            matchedAt: new Date(match.matchedAt),
+            status: match.status as 'accepted' | 'rejected' | 'pending'
+          }
+        })
+
+        this.matches = mappedMatches
         this.stats.totalMatches = this.matches.filter(m => m.status === 'accepted').length
       } catch (error) {
         this.error = 'Failed to fetch matches'
-        console.error(error)
+        console.error('Error fetching matches:', error)
       } finally {
         this.isLoading = false
       }
@@ -95,7 +143,6 @@ export const useMatchStore = defineStore('match', {
 
     async updateMatchStatus(matchId: number, status: 'accepted' | 'rejected') {
       try {
-        // TODO: Replace with actual API call
         await fetch(`/api/matches/${matchId}`, {
           method: 'PATCH',
           body: JSON.stringify({ status })

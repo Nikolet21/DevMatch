@@ -1,64 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useMatchStore } from '@/stores/matchStore'
 
 const matchStore = useMatchStore()
-const isLoading = ref(true)
-
-// Mock data for development
-const mockMatches = [
-  {
-    id: 1,
-    status: 'pending',
-    matchedAt: new Date().toISOString(),
-    developer: {
-      id: 1,
-      name: 'Sarah Chen',
-      location: 'San Francisco, CA',
-      bio: 'Full-stack developer passionate about building scalable web applications. Experience with React, Node.js, and cloud architecture.',
-      avatar: 'https://ui-avatars.com/api/?name=Sarah+Chen&background=5C6AC4&color=fff',
-      skills: ['React', 'Node.js', 'TypeScript', 'AWS', 'MongoDB']
-    }
-  },
-  {
-    id: 2,
-    status: 'accepted',
-    matchedAt: new Date(Date.now() - 86400000).toISOString(),
-    developer: {
-      id: 2,
-      name: 'Alex Rodriguez',
-      location: 'New York, NY',
-      bio: 'Frontend specialist with a keen eye for design. Love creating beautiful and accessible user interfaces.',
-      avatar: 'https://ui-avatars.com/api/?name=Alex+Rodriguez&background=9C6ADE&color=fff',
-      skills: ['Vue.js', 'CSS', 'UI/UX', 'Accessibility', 'Figma']
-    }
-  },
-  {
-    id: 3,
-    status: 'pending',
-    matchedAt: new Date().toISOString(),
-    developer: {
-      id: 3,
-      name: 'Maya Patel',
-      location: 'London, UK',
-      bio: 'Backend developer specializing in microservices and distributed systems. Always eager to learn new technologies.',
-      avatar: 'https://ui-avatars.com/api/?name=Maya+Patel&background=22C55E&color=fff',
-      skills: ['Go', 'Python', 'Docker', 'Kubernetes', 'gRPC']
-    }
-  }
-]
+const emit = defineEmits(['update:activeTab'])
 
 onMounted(async () => {
-  // Simulate API call with mock data
-  setTimeout(() => {
-    matchStore.matches = mockMatches
-    isLoading.value = false
-  }, 1000)
+  await matchStore.fetchMatches()
 })
 
-const emit = defineEmits<{
-  (e: 'update:activeTab', value: string): void
-}>()
+const isLoading = computed(() => matchStore.isLoading)
+const hasError = computed(() => matchStore.error !== null)
 
 const handleConnect = async (matchId: number) => {
   await matchStore.updateMatchStatus(matchId, 'accepted')
@@ -74,13 +26,7 @@ const handleConnect = async (matchId: number) => {
           <p class="text-text-secondary mt-2">Connect with talented developers who match your interests</p>
         </div>
         <div class="flex space-x-4">
-          <button class="rounded-xl bg-white/80 backdrop-blur-sm px-5 py-2.5 text-sm font-semibold text-primary border border-primary/10 hover:bg-primary/5 transition-all duration-300 shadow-sm hover:shadow-md">
-            <span class="flex items-center space-x-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-              <span>Filter</span>
-            </span>
-          </button>
-          <button class="rounded-xl bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-105">
+          <button @click="emit('update:activeTab', 'browse')" class="rounded-xl bg-gradient-to-r from-primary to-secondary px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all duration-300 shadow-sm hover:shadow-md transform hover:scale-105">
             <span class="flex items-center space-x-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
               <span>Find New Matches</span>
@@ -90,26 +36,31 @@ const handleConnect = async (matchId: number) => {
       </div>
     </div>
 
-    <div v-if="isLoading" class="flex justify-center items-center py-16">
-      <div class="relative">
-        <div class="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent"></div>
-        <div class="absolute inset-0 flex items-center justify-center">
-          <div class="animate-pulse h-8 w-8 rounded-full bg-primary/20"></div>
-        </div>
+    <div v-if="isLoading" class="text-center py-16 bg-white/50 backdrop-blur-sm rounded-2xl border border-primary/5">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+      <p class="mt-4 text-text-secondary">Loading your matches...</p>
+    </div>
+
+    <div v-else-if="hasError" class="text-center py-16 bg-white/50 backdrop-blur-sm rounded-2xl border border-red-200">
+      <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+        <font-awesome-icon icon="exclamation-triangle" class="w-8 h-8 text-red-500" />
       </div>
+      <h2 class="text-xl font-semibold text-red-600 mb-2">Error Loading Matches</h2>
+      <p class="text-text-secondary mb-6">{{ matchStore.error }}</p>
+      <button @click="matchStore.fetchMatches()" class="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors duration-200 shadow-sm hover:shadow-md">
+        Try Again
+      </button>
     </div>
 
     <div v-else-if="matchStore.matches.length === 0" class="text-center py-16 bg-white/50 backdrop-blur-sm rounded-2xl border border-primary/5">
-      <div class="flex flex-col items-center space-y-4">
-        <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-          <svg class="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-        </div>
-        <h3 class="text-xl font-semibold text-text-primary">No matches yet</h3>
-        <p class="text-text-secondary max-w-md">Start matching with other developers to connect and collaborate on exciting projects!</p>
-        <button @click="emit('update:activeTab', 'match-cards')" class="mt-6 rounded-xl bg-gradient-to-r from-primary to-secondary px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105">
-          Find Matches
-        </button>
+      <div class="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+        <font-awesome-icon icon="users" class="w-8 h-8 text-primary" />
       </div>
+      <h2 class="text-xl font-semibold text-text-primary mb-2">No Matches Yet</h2>
+      <p class="text-text-secondary mb-6">Start browsing to find your perfect match!</p>
+      <button @click="$emit('update:activeTab', 'browse')" class="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors duration-200 shadow-sm hover:shadow-md">
+        Browse Developers
+      </button>
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -163,4 +114,5 @@ const handleConnect = async (matchId: number) => {
       </div>
     </div>
   </div>
+
 </template>
