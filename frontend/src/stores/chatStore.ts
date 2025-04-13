@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { ChatMessage, ChatPartner, Chat } from '../interfaces/interfaces'
-import { mockChats, mockChatPartners } from '../data/mockData'
+import { mockChats, mockChatPartners, mockDevelopers } from '../data/mockData'
 
 export interface ChatState {
   activeChats: Chat[]
@@ -10,8 +10,8 @@ export interface ChatState {
 
 export const useChatStore = defineStore('chat', {
   state: (): ChatState => ({
-    activeChats: mockChats,
-    chatPartners: mockChatPartners,
+    activeChats: [],
+    chatPartners: [],
     selectedChatId: null
   }),
 
@@ -79,6 +79,65 @@ export const useChatStore = defineStore('chat', {
           partner.lastSeen = new Date()
         }
       }
+    },
+
+    async initializeChat(partnerId: string) {
+      // Find the chat partner from mockDevelopers
+      const partner = mockDevelopers.find(dev => dev.id.toString() === partnerId)
+      if (!partner) return
+
+      // Update or create chat partner information
+      const chatPartner: ChatPartner = {
+        id: partnerId,
+        name: partner.name,
+        avatar: partner.avatar,
+        isOnline: true,
+        lastSeen: new Date()
+      }
+
+      // Check if chat already exists in mockChats
+      const mockChat = mockChats.find(chat =>
+        chat.participants.includes(partnerId) && chat.participants.includes('currentUser')
+      )
+
+      // Initialize state if empty
+      if (this.activeChats.length === 0) {
+        this.activeChats = [...mockChats]
+        this.chatPartners = [...mockChatPartners]
+      }
+
+      // Check if chat exists in current state
+      let existingChat = this.activeChats.find(chat =>
+        chat.participants.includes(partnerId) && chat.participants.includes('currentUser')
+      )
+
+      const existingPartnerIndex = this.chatPartners.findIndex(p => p.id === partnerId)
+      if (existingPartnerIndex !== -1) {
+        // Update existing partner
+        this.chatPartners[existingPartnerIndex] = {
+          ...this.chatPartners[existingPartnerIndex],
+          ...chatPartner
+        }
+      } else {
+        // Add new partner
+        this.chatPartners.push(chatPartner)
+      }
+
+      if (!existingChat) {
+        // Create new chat if it doesn't exist
+        const newChat: Chat = mockChat || {
+          id: crypto.randomUUID(),
+          participants: ['currentUser', partnerId],
+          messages: [],
+          unreadCount: 0,
+          lastMessage: undefined
+        }
+        this.activeChats.push(newChat)
+        existingChat = newChat
+      }
+
+      // Select the chat
+      this.selectChat(existingChat.id)
     }
   }
 })

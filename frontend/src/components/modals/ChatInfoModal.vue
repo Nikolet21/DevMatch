@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
+import { ref, defineProps, defineEmits } from 'vue'
 import { useRouter } from 'vue-router'
-import type { ChatPartner } from '../interfaces/interfaces'
+import type { ChatPartner, Developer } from '../../interfaces/interfaces'
 
 const router = useRouter()
-
+const developer = ref<Developer | null>(null)
 const props = defineProps<{
   isOpen: boolean
   chatPartner: ChatPartner | null
@@ -21,6 +21,9 @@ function closeModal() {
 function handleAction(action: string) {
   if (action === 'viewProfile' && props.chatPartner?.id) {
     router.push(`/developer/${props.chatPartner.id}`)
+    closeModal()
+  } else if (action === 'report' && props.chatPartner?.id) {
+    router.push(`/report/${developer.value?.id}`)
     closeModal()
   } else {
     alert(`Action: ${action}`)
@@ -109,7 +112,7 @@ function handleAction(action: string) {
               <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
               </svg>
-              <span>Block User</span>
+              <span>Block this user</span>
             </button>
             <button
               @click="handleAction('report')"
