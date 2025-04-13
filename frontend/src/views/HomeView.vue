@@ -160,7 +160,7 @@ onUnmounted(() => {
                 @click="toggleProfileMenu"
                 class="group relative rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 transition-all duration-200 hover:scale-105">
                 <span class="sr-only">Profile</span>
-                <img :src="defaultAvatar" alt="Profile"
+                <img :src="currentUser?.avatar || defaultAvatar" alt="Profile"
                   class="h-6 w-6 rounded-full" />
               </button>
               <!-- Profile Dropdown -->
@@ -247,7 +247,7 @@ onUnmounted(() => {
               <div class="mt-auto space-y-4">
                 <div v-if="!isSidebarCollapsed" class="border-t border-gray-100 pt-4">
                   <div class="flex items-center space-x-3 px-3 py-2">
-                    <img :src="defaultAvatar" alt="Profile" class="w-10 h-10 rounded-full" />
+                    <img :src="currentUser?.avatar || defaultAvatar" alt="Profile" class="w-10 h-10 rounded-full" />
                     <div class="flex-1 min-w-0">
                       <h3 class="text-sm font-medium text-text-primary truncate">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h3>
                       <p class="text-xs text-text-secondary truncate">{{ currentUser?.email }}</p>
