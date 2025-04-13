@@ -9,6 +9,7 @@ const MatchCards = defineAsyncComponent(() => import('../components/MatchCards.v
 const MatchesSection = defineAsyncComponent(() => import('../components/MatchesSection.vue'))
 const ChatSection = defineAsyncComponent(() => import('../components/ChatSection.vue'))
 const ChatRoom = defineAsyncComponent(() => import('../components/ChatRoom.vue'))
+const SignOutModal = defineAsyncComponent(() => import('../components/SignOutModal.vue'))
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -16,6 +17,7 @@ const activeTab = ref('dashboard')
 const isSidebarCollapsed = ref(window.innerWidth < 1024)
 const showNotifications = ref(false)
 const showProfileMenu = ref(false)
+const showSignOutModal = ref(false)
 
 const currentUser = computed(() => userStore.currentUser)
 
@@ -54,8 +56,18 @@ const navigateToSettings = () => {
 }
 
 const handleLogout = () => {
+  showSignOutModal.value = true
+  showProfileMenu.value = false
+}
+
+const confirmLogout = () => {
   userStore.logout()
   router.push('/login')
+  showSignOutModal.value = false
+}
+
+const cancelLogout = () => {
+  showSignOutModal.value = false
 }
 
 const updateActiveTab = (newTab: string) => {
@@ -254,31 +266,21 @@ onUnmounted(() => {
 
           <!-- Main Content Area -->
           <div class="flex-1" :class="{ 'ml-20': isSidebarCollapsed, 'ml-72': !isSidebarCollapsed }">
-            <Suspense>
-              <template #default>
-                <div v-if="activeTab === 'chats'" class="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-[1600px] mx-auto">
-                  <ChatSection v-model:activeTab="activeTab" />
-                  <ChatRoom />
-                </div>
-                <template v-else>
-                  <DashboardSection
-                    v-if="activeTab === 'dashboard'"
-                    v-model="activeTab"
-                    @update:activeTab="updateActiveTab"
-                  />
-                  <MatchCards v-else-if="activeTab === 'browse'" :isSidebarCollapsed="isSidebarCollapsed" />
-                  <MatchesSection v-else-if="activeTab === 'matches'" />
-                </template>
-              </template>
-              <template #fallback>
-                <div class="flex items-center justify-center h-64">
-                  <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                </div>
-              </template>
-            </Suspense>
+            <div v-if="activeTab === 'chats'" class="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-[1600px] mx-auto">
+              <ChatSection v-model:activeTab="activeTab" />
+              <ChatRoom />
+            </div>
+            <DashboardSection
+              v-else-if="activeTab === 'dashboard'"
+              v-model="activeTab"
+              @update:activeTab="updateActiveTab"
+            />
+            <MatchCards v-else-if="activeTab === 'browse'" :isSidebarCollapsed="isSidebarCollapsed" />
+            <MatchesSection v-else-if="activeTab === 'matches'" v-model:activeTab="activeTab" />
           </div>
         </div>
       </div>
     </main>
   </div>
+  <SignOutModal v-if="showSignOutModal" @confirm="confirmLogout" @cancel="cancelLogout" />
 </template>

@@ -1,11 +1,29 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useMatchStore } from '../stores/matchStore'
+import { useUserStore } from '../stores/userStore'
+import { useProfileStore } from '../stores/profileStore'
+import router from '@/router/router'
 
 const emit = defineEmits(['update:activeTab'])
 const matchStore = useMatchStore()
-const firstName = ref('John')
-const profileCompletion = ref(80)
+const userStore = useUserStore()
+const profileStore = useProfileStore()
+
+const firstName = computed(() => userStore.currentUser?.firstName || 'Guest')
+const profileCompletion = computed(() => {
+  const profile = profileStore.profile
+  let completedFields = 0
+  const totalFields = 5 // firstName, lastName, bio, skills, githubUrl
+
+  if (profile?.firstName) completedFields++
+  if (profile?.lastName) completedFields++
+  if (profile?.bio) completedFields++
+  if (Array.isArray(profile?.skills) && profile.skills.length > 0) completedFields++
+  if (profile?.githubUrl) completedFields++
+
+  return Math.round((completedFields / totalFields) * 100)
+})
 
 onMounted(async () => {
   await matchStore.fetchMatches()
@@ -20,8 +38,24 @@ const recentMatches = matchStore.recentMatches.map(match => ({
 
 const stats = matchStore.matchStats
 
+const maxStatValue = computed(() => {
+  return Math.max(stats.likesReceived, stats.likesSent, stats.totalMatches, 10)
+})
+
+const likesReceivedWidth = computed(() => {
+  return `${(stats.likesReceived / maxStatValue.value) * 100}%`
+})
+
+const likesSentWidth = computed(() => {
+  return `${(stats.likesSent / maxStatValue.value) * 100}%`
+})
+
+const totalMatchesWidth = computed(() => {
+  return `${(stats.totalMatches / maxStatValue.value) * 100}%`
+})
+
 const navigateToProfile = () => {
-  emit('update:activeTab', 'profile')
+  router.push('/profile')
 }
 
 const navigateToMatches = () => {
@@ -37,7 +71,8 @@ const startBrowsing = () => {
   <div class="space-y-8">
     <!-- Welcome Banner -->
     <div class="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-6 shadow-sm">
-      <h1 class="text-3xl font-bold text-text-primary mb-2">Welcome back, {{ firstName }}! 👋</h1>
+      <h1 class="text-3xl font-bold text-text-primary mb-2">Welcome back, {{ firstName }}! </h1>
+      <p class="text-sm text-text-secondary mb-2">Profile completion progress</p>
       <div class="flex items-center space-x-4">
         <div class="flex-1 bg-white/50 rounded-full h-2 overflow-hidden">
           <div class="bg-primary h-full rounded-full" :style="{ width: `${profileCompletion}%` }"></div>
@@ -93,7 +128,7 @@ const startBrowsing = () => {
 
     <!-- Recent Matches -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h2 class="text-xl font-semibold text-text-primary mb-4">Recent Matches 🧑‍💻</h2>
+      <h2 class="text-xl font-semibold text-text-primary mb-4">Recent Matches</h2>
       <div v-if="recentMatches.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <div v-for="match in recentMatches" :key="match.id"
           class="flex items-center space-x-3 p-3 rounded-lg border border-gray-100 hover:border-primary/20 transition-all duration-200">
@@ -128,7 +163,7 @@ const startBrowsing = () => {
           <span class="text-2xl font-bold text-primary">{{ stats.likesReceived }}</span>
         </div>
         <div class="w-full bg-gray-100 rounded-full h-1">
-          <div class="bg-primary h-full rounded-full" style="width: 40%"></div>
+          <div class="bg-primary h-full rounded-full" :style="{ width: likesReceivedWidth }"></div>
         </div>
       </div>
 
@@ -138,7 +173,7 @@ const startBrowsing = () => {
           <span class="text-2xl font-bold text-primary">{{ stats.likesSent }}</span>
         </div>
         <div class="w-full bg-gray-100 rounded-full h-1">
-          <div class="bg-primary h-full rounded-full" style="width: 60%"></div>
+          <div class="bg-primary h-full rounded-full" :style="{ width: likesSentWidth }"></div>
         </div>
       </div>
 
@@ -148,7 +183,7 @@ const startBrowsing = () => {
           <span class="text-2xl font-bold text-primary">{{ stats.totalMatches }}</span>
         </div>
         <div class="w-full bg-gray-100 rounded-full h-1">
-          <div class="bg-primary h-full rounded-full" style="width: 20%"></div>
+          <div class="bg-primary h-full rounded-full" :style="{ width: totalMatchesWidth }"></div>
         </div>
       </div>
     </div>
