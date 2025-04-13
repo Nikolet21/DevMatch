@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { Developer } from '../interfaces/interfaces'
 import { mockDevelopers } from '../data/mockData'
-
 const router = useRouter()
 const route = useRoute()
 
@@ -57,6 +56,38 @@ const goBack = () => {
 const initiateChat = () => {
   // Implement chat initiation logic
   router.push(`/chat/${developer.value?.id}`)
+}
+
+const handleMute = () => {
+  console.log('Muting developer:', developer.value?.id)
+  // TODO: Implement mute functionality
+}
+
+const handleBlock = () => {
+  console.log('Blocking developer:', developer.value?.id)
+  // TODO: Implement block functionality
+}
+
+const handleReport = () => {
+  if (developer.value?.id) {
+    router.push(`/report/${developer.value.id}`)
+  }
+}
+
+function handleAction(action: string) {
+  switch (action) {
+    case 'mute':
+      handleMute()
+      break
+    case 'block':
+      handleBlock()
+      break
+    case 'report':
+      handleReport()
+      break
+    default:
+      console.log('Unknown action:', action)
+  }
 }
 </script>
 
@@ -114,6 +145,7 @@ const initiateChat = () => {
                         :key="action.name"
                         class="p-3 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all duration-200"
                         :title="action.title"
+                        @click="handleAction(action.name)"
                       >
                         <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24">
                           <path v-if="action.name === 'mute'" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" class="stroke-indigo-500" />
@@ -256,4 +288,7 @@ const initiateChat = () => {
       </div>
     </div>
   </div>
+
+
 </template>
+

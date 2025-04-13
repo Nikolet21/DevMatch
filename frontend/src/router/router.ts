@@ -47,6 +47,19 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/report/:targetId',
+      name: 'report',
+      component: () => import('../views/ReportView.vue'),
+      meta: { requiresAuth: true },
+      props: true
+    },
+    {
+      path: '/chat/:id',
+      name: 'chat',
+      component: () => import('../views/ChatView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFoundView.vue'),

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useChatStore } from '../stores/chatStore'
 import { useUserStore } from '../stores/userStore'
-import { ref, computed, nextTick } from 'vue'
-import ChatInfoModal from './ChatInfoModal.vue'
+import { ref, computed, nextTick, defineAsyncComponent } from 'vue'
+const ChatInfoModal = defineAsyncComponent(() => import('./modals/ChatInfoModal.vue'))
 
 const chatStore = useChatStore()
 const userStore = useUserStore()

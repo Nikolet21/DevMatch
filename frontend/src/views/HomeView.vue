@@ -9,7 +9,7 @@ const MatchCards = defineAsyncComponent(() => import('../components/MatchCards.v
 const MatchesSection = defineAsyncComponent(() => import('../components/MatchesSection.vue'))
 const ChatSection = defineAsyncComponent(() => import('../components/ChatSection.vue'))
 const ChatRoom = defineAsyncComponent(() => import('../components/ChatRoom.vue'))
-const SignOutModal = defineAsyncComponent(() => import('../components/SignOutModal.vue'))
+const SignOutModal = defineAsyncComponent(() => import('../components/modals/SignOutModal.vue'))
 
 const router = useRouter()
 const userStore = useUserStore()
