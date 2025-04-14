@@ -1,60 +1,39 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useReportStore } from '../stores/reportStore'
 
 const router = useRouter()
 const route = useRoute()
+const reportStore = useReportStore()
 
-interface ReportForm {
-  type: string
-  targetId: string | number
-  reason: string
-  description: string
-  evidence: string
-}
+// Initialize store with route params and determine report type
+const targetId = route.params.targetId as string
+if (!targetId) {
+  router.push('/home')
+} else {
+  reportStore.setTargetId(targetId)
 
-
-const reportForm = ref<ReportForm>({
-  type: 'user',
-  targetId: route.params.id as string,
-  reason: '',
-  description: '',
-  evidence: ''
-})
-
-const isSubmitting = ref(false)
-const error = ref<string | null>(null)
-
-const getReportTitle = () => {
-  switch (reportForm.value.type) {
-    case 'user':
-      return 'Report User'
-    case 'content':
-      return 'Report Content'
-    case 'bug':
-      return 'Report Bug'
-    default:
-      return 'Submit Report'
+  // Determine report type from URL
+  if (targetId.includes('_album_')) {
+    reportStore.setType('content')
+  } else {
+    reportStore.setType('user')
   }
 }
 
 const handleSubmit = async () => {
-  try {
-    isSubmitting.value = true
-    error.value = null
-
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
+  const success = await reportStore.submitReport()
+  if (success) {
     router.push('/home')
-  } catch (e) {
-    error.value = 'Failed to submit report. Please try again.'
-  } finally {
-    isSubmitting.value = false
   }
 }
 
 const goBack = () => {
   router.back()
+}
+
+const handleFileChange = (event: Event) => {
+  reportStore.form.evidence = (event.target as HTMLInputElement)?.files?.[0] || null
 }
 </script>
 
@@ -74,62 +53,115 @@ const goBack = () => {
 
       <!-- Report Form -->
       <div class="bg-white shadow-xl rounded-3xl p-8 backdrop-blur-sm bg-opacity-95">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">{{ getReportTitle() }}</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">{{ reportStore.getReportTitle() }}</h1>
 
         <form @submit.prevent="handleSubmit" class="space-y-6">
-          <!-- Reason Field -->
+          <!-- Category Field -->
           <div>
-            <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">Reason for Report</label>
+            <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
             <select
-              id="reason"
-              v-model="reportForm.reason"
+              id="category"
+              v-model="reportStore.form.category"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
             >
-              <option value="" disabled>Select a reason</option>
-              <option value="inappropriate">Inappropriate Content</option>
-              <option value="spam">Spam</option>
-              <option value="harassment">Harassment</option>
-              <option value="fake">Fake Profile/Content</option>
-              <option value="other">Other</option>
+              <option value="" disabled>Select a category</option>
+              <option v-for="category in reportStore.categories" :key="category.value" :value="category.value">
+                {{ category.label }}
+              </option>
             </select>
           </div>
+
+          <!-- Subcategory Field -->
+          <div v-if="reportStore.form.category">
+            <label for="subcategory" class="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
+            <select
+              id="subcategory"
+              v-model="reportStore.form.subcategory"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="" disabled>Select a subcategory</option>
+              <option
+                v-for="subcategory in reportStore.categories.find(c => c.value === reportStore.form.category)?.subcategories"
+                :key="subcategory.value"
+                :value="subcategory.value"
+              >
+                {{ subcategory.label }}
+              </option>
+            </select>
+          </div>
+
+
 
           <!-- Description Field -->
           <div>
             <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
             <textarea
               id="description"
-              v-model="reportForm.description"
+              v-model="reportStore.form.description"
               rows="4"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="Please provide detailed information about the issue..."
-              required
             ></textarea>
+            <span v-if="reportStore.validationErrors.description" class="text-red-500 text-sm mt-1">
+              {{ reportStore.validationErrors.description }}
+            </span>
           </div>
 
           <!-- Evidence Field -->
           <div>
-            <label for="evidence" class="block text-sm font-medium text-gray-700 mb-2">Evidence (Optional)</label>
-            <textarea
-              id="evidence"
-              v-model="reportForm.evidence"
-              rows="2"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Provide any links or additional information that supports your report..."
-            ></textarea>
+            <label for="evidence" class="block text-sm font-medium text-gray-700 mb-2">Screenshot Evidence (Optional)</label>
+            <div class="relative">
+              <input
+                type="file"
+                id="evidence"
+                @change="handleFileChange"
+                accept="image/*"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div class="w-full px-4 py-3 border-2 border-dashed border-indigo-300 rounded-lg bg-indigo-50 hover:bg-indigo-100 hover:border-indigo-400 transition-all duration-200 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span class="text-indigo-600 font-medium">Choose a file</span>
+              </div>
+            </div>
           </div>
 
+          <!-- Contact Information Field -->
+          <div>
+            <label for="contactInfo" class="block text-sm font-medium text-gray-700 mb-2">Contact Information (Optional)</label>
+            <input
+              type="text"
+              id="contactInfo"
+              v-model="reportStore.form.contactInfo"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="How can we contact you for additional information if needed?"
+            />
+          </div>
+
+          <!-- Validation Error Messages -->
+          <div v-if="reportStore.validationErrors.category" class="text-red-500 text-sm mb-2">
+            {{ reportStore.validationErrors.category }}
+          </div>
+          <div v-if="reportStore.validationErrors.subcategory" class="text-red-500 text-sm mb-2">
+            {{ reportStore.validationErrors.subcategory }}
+          </div>
+          <div v-if="reportStore.validationErrors.evidence" class="text-red-500 text-sm mb-2">
+            {{ reportStore.validationErrors.evidence }}
+          </div>
+          <div v-if="reportStore.validationErrors.contactInfo" class="text-red-500 text-sm mb-2">
+            {{ reportStore.validationErrors.contactInfo }}
+          </div>
           <!-- Error Message -->
-          <div v-if="error" class="text-red-600 text-sm">{{ error }}</div>
+          <div v-if="reportStore.error" class="text-red-600 text-sm mb-2">{{ reportStore.error }}</div>
 
           <!-- Submit Button -->
           <button
             type="submit"
-            :disabled="isSubmitting"
+            :disabled="reportStore.isSubmitting"
             class="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {{ isSubmitting ? 'Submitting...' : 'Submit Report' }}
+            {{ reportStore.isSubmitting ? 'Submitting...' : 'Submit Report' }}
           </button>
         </form>
       </div>

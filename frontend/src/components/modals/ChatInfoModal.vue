@@ -23,7 +23,7 @@ function handleAction(action: string) {
     router.push(`/developer/${props.chatPartner.id}`)
     closeModal()
   } else if (action === 'report' && props.chatPartner?.id) {
-    router.push(`/report/${developer.value?.id}`)
+    router.push({ name: 'report', params: { targetId: props.chatPartner.id.toString() }})
     closeModal()
   } else {
     alert(`Action: ${action}`)

@@ -70,7 +70,12 @@ const handleBlock = () => {
 
 const handleReport = () => {
   if (developer.value?.id) {
-    router.push(`/report/${developer.value.id}`)
+    router.push({
+      name: 'report',
+      params: {
+        targetId: `user_${developer.value.id}`
+      }
+    })
   }
 }
 
@@ -87,6 +92,17 @@ function handleAction(action: string) {
       break
     default:
       console.log('Unknown action:', action)
+  }
+}
+
+const handleAlbumReport = (imageId: string) => {
+  if (developer.value?.id) {
+    router.push({
+      name: 'report',
+      params: {
+        targetId: `${developer.value.id}_album_${imageId}`
+      }
+    })
   }
 }
 </script>
@@ -260,6 +276,7 @@ function handleAction(action: string) {
                         <p class="text-xs opacity-75">{{ new Date(image.uploadedAt).toLocaleDateString() }}</p>
                       </div>
                       <button
+                        @click="handleAlbumReport(image.id)"
                         class="p-2 text-white hover:text-red-500 transition-colors duration-200"
                         title="Report this image"
                       >
