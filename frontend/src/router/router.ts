@@ -8,7 +8,15 @@ const router = createRouter({
       path: '/home',
       name: 'home',
       component: () => import('../views/HomeView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: 'chat/:id?',
+          name: 'home-chat',
+          component: () => import('../views/ChatView.vue'),
+          meta: { requiresAuth: true }
+        }
+      ]
     },
     {
       path: '/about',
@@ -26,6 +34,12 @@ const router = createRouter({
       path: '/developer/:id',
       name: 'developer-profile',
       component: () => import('../views/DeveloperProfileView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: () => import('../views/NotificationsView.vue'),
       meta: { requiresAuth: true }
     },
     {
@@ -53,12 +67,7 @@ const router = createRouter({
       meta: { requiresAuth: true },
       props: true
     },
-    {
-      path: '/chat/:id',
-      name: 'chat',
-      component: () => import('../views/ChatView.vue'),
-      meta: { requiresAuth: true }
-    },
+
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',

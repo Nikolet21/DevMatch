@@ -1,31 +1,40 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, defineAsyncComponent, computed } from 'vue'
+import { ref, onMounted, onUnmounted, defineAsyncComponent, computed, watch } from 'vue'
 import defaultAvatar from '../assets/default-avatar.svg'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/userStore'
+import { useNotificationStore } from '../stores/notificationStore'
+import { faInfoCircle, faCheckCircle, faExclamationTriangle, faTimesCircle } from '@fortawesome/free-solid-svg-icons'
 
 const DashboardSection = defineAsyncComponent(() => import('../components/DashboardSection.vue'))
 const MatchCards = defineAsyncComponent(() => import('../components/MatchCards.vue'))
 const MatchesSection = defineAsyncComponent(() => import('../components/MatchesSection.vue'))
-const ChatSection = defineAsyncComponent(() => import('../components/ChatSection.vue'))
-const ChatRoom = defineAsyncComponent(() => import('../components/ChatRoom.vue'))
+const ChatView = defineAsyncComponent(() => import('./ChatView.vue'))
 const SignOutModal = defineAsyncComponent(() => import('../components/modals/SignOutModal.vue'))
 
+
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
+const notificationStore = useNotificationStore()
 const activeTab = ref('dashboard')
+const chatId = computed(() => route.params.id as string)
+
+watch(chatId, (newId) => {
+  if (newId) {
+    activeTab.value = 'chat'
+  }
+})
+
 const isSidebarCollapsed = ref(window.innerWidth < 1024)
 const showNotifications = ref(false)
 const showProfileMenu = ref(false)
 const showSignOutModal = ref(false)
 
 const currentUser = computed(() => userStore.currentUser)
-
-const notifications = ref([
-  { id: 1, title: 'New Match!', message: 'You have a new match with Sarah Developer', unread: true },
-  { id: 2, title: 'Message Received', message: 'John Smith sent you a message', unread: true },
-  { id: 3, title: 'Profile View', message: 'Someone viewed your profile', unread: false }
-])
+const notifications = computed(() => notificationStore.allNotifications)
+const hasUnread = computed(() => notificationStore.hasUnread)
+const unreadCount = computed(() => notificationStore.unreadCount)
 
 const handleResize = () => {
   isSidebarCollapsed.value = window.innerWidth < 1024
@@ -72,6 +81,9 @@ const cancelLogout = () => {
 
 const updateActiveTab = (newTab: string) => {
   activeTab.value = newTab
+  if (newTab !== 'chat') {
+    router.push('/home')
+  }
 }
 
 const closeDropdowns = (event: MouseEvent) => {
@@ -82,9 +94,59 @@ const closeDropdowns = (event: MouseEvent) => {
   }
 }
 
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case 'success':
+      return faCheckCircle
+    case 'warning':
+      return faExclamationTriangle
+    case 'error':
+      return faTimesCircle
+    default:
+      return faInfoCircle
+  }
+}
+
+const getNotificationIconClass = (type: string) => {
+  switch (type) {
+    case 'success':
+      return 'text-green-500'
+    case 'warning':
+      return 'text-yellow-500'
+    case 'error':
+      return 'text-red-500'
+    default:
+      return 'text-primary'
+  }
+}
+
+const formatNotificationTime = (date: Date) => {
+  const now = new Date()
+  const notificationDate = new Date(date)
+  const diffMs = now.getTime() - notificationDate.getTime()
+  const diffSecs = Math.floor(diffMs / 1000)
+  const diffMins = Math.floor(diffSecs / 60)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffSecs < 60) {
+    return 'just now'
+  } else if (diffMins < 60) {
+    return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`
+  } else if (diffHours < 24) {
+    return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+  } else if (diffDays < 7) {
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+  } else {
+    return notificationDate.toLocaleDateString()
+  }
+}
+
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   document.addEventListener('click', closeDropdowns)
+  
+  // Mock notifications are now loaded directly from mockData.ts via the store
 })
 
 onUnmounted(() => {
@@ -124,7 +186,9 @@ onUnmounted(() => {
                 class="group relative rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 transition-all duration-200 hover:scale-105">
                 <span class="sr-only">Notifications</span>
                 <font-awesome-icon icon="bell" class="h-6 w-6" />
-                <span class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white"></span>
+                <span v-if="hasUnread" class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold" :class="{'text-white': unreadCount > 9}">
+                  {{ unreadCount > 9 ? '9+' : unreadCount }}
+                </span>
               </button>
               <!-- Notifications Dropdown -->
               <div v-if="showNotifications"
@@ -133,23 +197,33 @@ onUnmounted(() => {
                   <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
                 </div>
                 <div class="max-h-96 overflow-y-auto">
-                  <div v-for="notification in notifications" :key="notification.id"
-                    class="px-4 py-3 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+                  <div v-if="notifications.length === 0" class="px-4 py-3 text-center text-gray-500">
+                    <p>No notifications yet</p>
+                  </div>
+                  <div v-else v-for="notification in notifications.slice(0, 5)" :key="notification.id"
+                    class="px-4 py-3 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                    @click="notificationStore.markAsRead(notification.id)">
                     <div class="flex items-start space-x-3">
+                      <div class="flex-shrink-0 mt-1">
+                        <font-awesome-icon :icon="getNotificationIcon(notification.type)" 
+                        :class="getNotificationIconClass(notification.type)" 
+                        class="text-lg"/>
+                      </div>
                       <div class="flex-1">
                         <p class="text-sm font-medium text-gray-900 flex items-center">
                           {{ notification.title }}
-                          <span v-if="notification.unread"
+                          <span v-if="!notification.read"
                             class="ml-2 h-2 w-2 rounded-full bg-primary"></span>
                         </p>
                         <p class="text-sm text-gray-500 mt-0.5">{{ notification.message }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ formatNotificationTime(notification.timestamp) }}</p>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div class="px-4 py-2 border-t border-gray-100">
-                  <button class="text-sm text-primary hover:text-primary/80 transition-colors duration-200">
-                    Mark all as read
+                  <button @click="router.push('/notifications')" class="text-sm text-primary hover:text-primary/80 transition-colors duration-200">
+                    View All Notifications
                   </button>
                 </div>
               </div>
@@ -217,27 +291,27 @@ onUnmounted(() => {
                   <font-awesome-icon icon="bolt" class="w-5 h-5 text-primary" />
                   <span v-if="!isSidebarCollapsed" class="truncate">Quick Actions</span>
                 </h2>
-                <button @click="activeTab = 'dashboard'"
+                <button @click="updateActiveTab('dashboard')"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'dashboard' }">
                   <font-awesome-icon icon="bars" class="w-5 h-5 flex-shrink-0" />
                   <span v-if="!isSidebarCollapsed" class="truncate">Dashboard</span>
                 </button>
-                <button @click="activeTab = 'browse'"
+                <button @click="updateActiveTab('browse')"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'browse' }">
                   <font-awesome-icon icon="users" class="w-5 h-5 flex-shrink-0" />
                   <span v-if="!isSidebarCollapsed" class="truncate">Find Matches</span>
                 </button>
-                <button @click="activeTab = 'matches'"
+                <button @click="updateActiveTab('matches')"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
                   :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'matches' }">
                   <font-awesome-icon icon="users" class="w-5 h-5 flex-shrink-0" />
                   <span v-if="!isSidebarCollapsed" class="truncate">Matched Developers</span>
                 </button>
-                <button @click="activeTab = 'chats'"
+                <button @click="() => { activeTab = 'chat'; router.push('/home/chat'); }"
                   class="group w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-primary/10 hover:text-primary transition-all duration-200"
-                  :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'chats' }">
+                  :class="{ 'justify-center px-2': isSidebarCollapsed, 'bg-primary/10 text-primary': activeTab === 'chat' }">
                   <font-awesome-icon icon="comments" class="w-5 h-5 flex-shrink-0" />
                   <span v-if="!isSidebarCollapsed" class="truncate">Active Chats</span>
                 </button>
@@ -266,17 +340,15 @@ onUnmounted(() => {
 
           <!-- Main Content Area -->
           <div class="flex-1" :class="{ 'ml-20': isSidebarCollapsed, 'ml-72': !isSidebarCollapsed }">
-            <div v-if="activeTab === 'chats'" class="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-[1600px] mx-auto">
-              <ChatSection v-model:activeTab="activeTab" />
-              <ChatRoom />
-            </div>
+
             <DashboardSection
-              v-else-if="activeTab === 'dashboard'"
+              v-if="activeTab === 'dashboard'"
               v-model="activeTab"
               @update:activeTab="updateActiveTab"
             />
             <MatchCards v-else-if="activeTab === 'browse'" :isSidebarCollapsed="isSidebarCollapsed" />
             <MatchesSection v-else-if="activeTab === 'matches'" v-model:activeTab="activeTab" />
+            <ChatView v-else-if="activeTab === 'chat'" />
           </div>
         </div>
       </div>
