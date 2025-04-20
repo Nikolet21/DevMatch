@@ -119,6 +119,8 @@ const handleLogin = async () => {
     await userStore.login(loginForm.email, loginForm.password, loginForm.rememberMe)
     router.push('/home')
   } catch (error) {
+    loginErrors.email = storeError.value || undefined
+    loginErrors.password = storeError.value || undefined
     console.error('Login error:', error)
   }
 }
