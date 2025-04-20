@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type { Developer, Match, MatchState } from '../interfaces/interfaces'
 import { mockDevelopers, mockMatches } from '../data/mockData'
 import { useChatStore } from './chatStore'
+import { useNotificationStore } from './notificationStore'
 
 export const useMatchStore = defineStore('match', {
   state: (): MatchState => ({
@@ -63,9 +64,13 @@ export const useMatchStore = defineStore('match', {
           m => m.developer.id === developer.id && m.status === 'pending'
         )
 
+        const notificationStore = useNotificationStore()
+
         if (existingMatch) {
           // If there's a pending match, it means mutual like - auto accept
           await this.updateMatchStatus(existingMatch.id, 'accepted')
+          
+          // Notification handled in updateMatchStatus
         } else {
           // Create new pending match
           const newMatch: Match = {
@@ -76,12 +81,26 @@ export const useMatchStore = defineStore('match', {
           }
           this.matches.push(newMatch)
           this.stats.likesSent++
+          
+          // Add notification for potential match
+          notificationStore.info(
+            'Interest Sent',
+            `You showed interest in connecting with ${developer.name}. We'll notify you if they connect back!`,
+            '/home/matches'
+          )
         }
 
         this.moveToNextDeveloper()
       } catch (error) {
         this.error = 'Failed to like developer'
         console.error(error)
+        
+        // Add error notification
+        const notificationStore = useNotificationStore()
+        notificationStore.error(
+          'Connection Failed',
+          'Failed to express interest in connecting. Please try again later.'
+        )
       }
     },
 
@@ -164,12 +183,27 @@ export const useMatchStore = defineStore('match', {
           match.status = status
           if (status === 'accepted') {
             this.stats.totalMatches++
+            
+            // Add notification for successful connection
+            const notificationStore = useNotificationStore()
+            notificationStore.success(
+              'New Connection!',
+              `You've successfully connected with ${match.developer.name}. Start chatting now!`,
+              `/chat/${match.developer.id}`
+            )
+            
             // Initialize chat when match is accepted
             const chatStore = useChatStore()
             await chatStore.initializeChat(match.developer.id.toString())
           }
         }
       } catch (error) {
+        const notificationStore = useNotificationStore()
+        notificationStore.error(
+          'Connection Update Failed',
+          'Failed to update connection status. Please try again later.'
+        )
+        
         this.error = 'Failed to update match status'
         console.error(error)
       }

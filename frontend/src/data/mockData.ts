@@ -1,4 +1,4 @@
-import type { Developer, Chat, ChatPartner, ChatMessage, User, UserRegistrationData } from '../interfaces/interfaces'
+import type { Developer, Chat, ChatPartner, ChatMessage, User, UserRegistrationData, Notification } from '../interfaces/interfaces'
 import defaultAvatar from '../assets/default-avatar.svg'
 import developerProfiles from '../assets/developer-profiles.svg'
 import matchingFunctionality from '../assets/matching-functionality.svg'
@@ -316,5 +316,72 @@ export const mockChats: Chat[] = [
     ],
     unreadCount: 2,
     lastMessage: createMockMessage('msg8', 'dev3', 'currentUser', 'Perfect! When can we discuss the details?', new Date(Date.now() - 1800000))
+  }
+]
+
+// Create mock notifications with different types and timestamps
+export const mockNotifications: Notification[] = [
+  {
+    id: 'notification-1',
+    title: 'New Match!',
+    message: 'You have a new match with Sarah Developer',
+    type: 'info',
+    read: false,
+    timestamp: new Date(),
+    link: '/home/matches'
+  },
+  {
+    id: 'notification-2',
+    title: 'Message Received',
+    message: 'John Smith sent you a message',
+    type: 'info',
+    read: false,
+    timestamp: new Date(Date.now() - 5 * 60 * 1000), 
+    link: '/home/chat'
+  },
+  {
+    id: 'notification-3',
+    title: 'Profile Updated',
+    message: 'Your profile has been successfully updated',
+    type: 'success',
+    read: false,
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), 
+    link: '/profile'
+  },
+  {
+    id: 'notification-4',
+    title: 'Subscription Ending',
+    message: 'Your premium subscription will end in 3 days',
+    type: 'warning',
+    read: true,
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), 
+    link: '/settings'
+  },
+  {
+    id: 'notification-5',
+    title: 'Payment Failed',
+    message: 'Your last payment method was declined',
+    type: 'error',
+    read: true,
+    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 
+    link: '/settings'
+  },
+  {
+    id: 'notification-6',
+    title: 'Security Alert',
+    message: 'Your account was accessed from a new device',
+    type: 'warning',
+    read: true,
+    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    link: '/settings'
+  },
+  {
+    id: 'notification-7',
+    title: 'New Feature Available',
+    message: 'Try our new AI-powered match recommendations',
+    type: 'info',
+    read: true,
+    timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    link: '/home'
   }
 ]

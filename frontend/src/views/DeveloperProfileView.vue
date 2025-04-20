@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { usePrivacyStore } from '../stores/privacyStore'
 import type { Developer } from '../interfaces/interfaces'
 import { mockDevelopers } from '../data/mockData'
+import PrivacyConfirmationModal from '../components/modals/PrivacyConfirmationModal.vue'
+
 const router = useRouter()
 const route = useRoute()
+const privacyStore = usePrivacyStore()
 
 const developer = ref<Developer | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+const showNotification = ref(false)
+const notificationMessage = ref('')
+
+// Add these new refs for the confirmation modal
+const showPrivacyModal = ref(false)
+const privacyAction = ref<'mute' | 'unmute' | 'block' | 'unblock'>('mute')
 
 // Function to fetch developer profile
 async function fetchDeveloperProfile(id: string) {
@@ -37,6 +47,29 @@ const actions = [
   { name: 'report', title: 'Report this developer' }
 ]
 
+// Check if developer is muted
+const isUserMuted = computed(() => {
+  if (!developer.value?.id) return false
+  return privacyStore.isUserMuted(developer.value.id.toString())
+})
+
+// Check if developer is blocked
+const isUserBlocked = computed(() => {
+  if (!developer.value?.id) return false
+  return privacyStore.isUserBlocked(developer.value.id.toString())
+})
+
+// Watch for changes in success message to show notification
+watch(() => privacyStore.successMessage, (newVal) => {
+  if (newVal) {
+    notificationMessage.value = newVal
+    showNotification.value = true
+    setTimeout(() => {
+      showNotification.value = false
+    }, 3000)
+  }
+})
+
 onMounted(async () => {
   try {
     const developerId = route.params.id as string
@@ -46,7 +79,11 @@ onMounted(async () => {
     error.value = (e as Error).message
     isLoading.value = false
   }
+})
 
+// Save privacy settings when component is unmounted
+onBeforeUnmount(() => {
+  privacyStore.savePrivacySettings()
 })
 
 const goBack = () => {
@@ -59,13 +96,48 @@ const initiateChat = () => {
 }
 
 const handleMute = () => {
-  console.log('Muting developer:', developer.value?.id)
-  // TODO: Implement mute functionality
+  if (!developer.value) return
+  
+  // Instead of immediately taking action, show the confirmation modal
+  privacyAction.value = isUserMuted.value ? 'unmute' : 'mute'
+  showPrivacyModal.value = true
 }
 
 const handleBlock = () => {
-  console.log('Blocking developer:', developer.value?.id)
-  // TODO: Implement block functionality
+  if (!developer.value) return
+  
+  // Instead of immediately taking action, show the confirmation modal
+  privacyAction.value = isUserBlocked.value ? 'unblock' : 'block'
+  showPrivacyModal.value = true
+}
+
+// Add a new function to handle the confirmation
+const handlePrivacyConfirm = () => {
+  if (!developer.value) return
+  
+  // Close the modal first
+  showPrivacyModal.value = false
+  
+  // Perform the action based on what was confirmed
+  switch (privacyAction.value) {
+    case 'mute':
+      privacyStore.muteUser(developer.value.id.toString(), developer.value.name)
+      break
+    case 'unmute':
+      privacyStore.unmuteUser(developer.value.id.toString(), developer.value.name)
+      break
+    case 'block':
+      privacyStore.blockUser(developer.value.id.toString(), developer.value.name)
+      break
+    case 'unblock':
+      privacyStore.unblockUser(developer.value.id.toString(), developer.value.name)
+      break
+  }
+}
+
+// Add a function to cancel the action
+const handlePrivacyCancel = () => {
+  showPrivacyModal.value = false
 }
 
 const handleReport = () => {
@@ -162,6 +234,9 @@ const handleAlbumReport = (imageId: string) => {
                         class="p-3 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all duration-200"
                         :title="action.title"
                         @click="handleAction(action.name)"
+                        :class="{
+                          'bg-gray-100': (action.name === 'mute' && isUserMuted) || (action.name === 'block' && isUserBlocked)
+                        }"
                       >
                         <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24">
                           <path v-if="action.name === 'mute'" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" class="stroke-indigo-500" />
@@ -304,8 +379,16 @@ const handleAlbumReport = (imageId: string) => {
         </div>
       </div>
     </div>
+
+    <!-- Privacy Confirmation Modal -->
+    <PrivacyConfirmationModal
+      v-if="developer"
+      :is-open="showPrivacyModal"
+      :action="privacyAction"
+      :user-name="developer.name"
+      @confirm="handlePrivacyConfirm"
+      @cancel="handlePrivacyCancel"
+    />
   </div>
-
-
 </template>
 

@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref, defineProps, defineEmits, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import type { ChatPartner, Developer } from '../../interfaces/interfaces'
+import { usePrivacyStore } from '../../stores/privacyStore'
+import type { ChatPartner } from '../../interfaces/interfaces'
+import PrivacyConfirmationModal from './PrivacyConfirmationModal.vue'
 
 const router = useRouter()
-const developer = ref<Developer | null>(null)
+const privacyStore = usePrivacyStore()
+const showNotification = ref(false)
+const notificationMessage = ref('')
+
 const props = defineProps<{
   isOpen: boolean
   chatPartner: ChatPartner | null
@@ -14,7 +19,33 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+const isUserMuted = computed(() => {
+  if (!props.chatPartner?.id) return false
+  return privacyStore.isUserMuted(props.chatPartner.id)
+})
+
+const isUserBlocked = computed(() => {
+  if (!props.chatPartner?.id) return false
+  return privacyStore.isUserBlocked(props.chatPartner.id)
+})
+
+// Watch for changes in success message to show notification
+watch(() => privacyStore.successMessage, (newVal) => {
+  if (newVal) {
+    notificationMessage.value = newVal
+    showNotification.value = true
+    setTimeout(() => {
+      showNotification.value = false
+    }, 3000)
+  }
+})
+
+
+const showPrivacyModal = ref(false)
+const privacyAction = ref<'mute' | 'unmute' | 'block' | 'unblock'>('mute')
+
 function closeModal() {
+  privacyStore.clearMessages()
   emit('close')
 }
 
@@ -25,9 +56,46 @@ function handleAction(action: string) {
   } else if (action === 'report' && props.chatPartner?.id) {
     router.push({ name: 'report', params: { targetId: props.chatPartner.id.toString() }})
     closeModal()
+  } else if (action === 'mute' && props.chatPartner?.id) {
+    privacyAction.value = isUserMuted.value ? 'unmute' : 'mute'
+    showPrivacyModal.value = true
+  } else if (action === 'block' && props.chatPartner?.id) {
+    privacyAction.value = isUserBlocked.value ? 'unblock' : 'block'
+    showPrivacyModal.value = true
   } else {
     alert(`Action: ${action}`)
   }
+}
+
+function handlePrivacyConfirm() {
+  if (!props.chatPartner?.id) return
+  
+  showPrivacyModal.value = false
+  
+  // Perform the action based on what was confirmed
+  switch (privacyAction.value) {
+    case 'mute':
+      privacyStore.muteUser(props.chatPartner.id, props.chatPartner.name)
+      break
+    case 'unmute':
+      privacyStore.unmuteUser(props.chatPartner.id, props.chatPartner.name)
+      break
+    case 'block':
+      privacyStore.blockUser(props.chatPartner.id, props.chatPartner.name)
+      break
+    case 'unblock':
+      privacyStore.unblockUser(props.chatPartner.id, props.chatPartner.name)
+      break
+  }
+}
+
+function handlePrivacyCancel() {
+  showPrivacyModal.value = false
+}
+
+// Save privacy settings to localStorage when component unmounts
+function beforeUnmount() {
+  privacyStore.savePrivacySettings()
 }
 </script>
 
@@ -99,20 +167,22 @@ function handleAction(action: string) {
             <button
               @click="handleAction('mute')"
               class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center space-x-3 transition-colors"
+              :class="{ 'bg-gray-100': isUserMuted }"
             >
               <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
-              <span>Mute Notifications</span>
+              <span>{{ isUserMuted ? 'Unmute Notifications' : 'Mute Notifications' }}</span>
             </button>
             <button
               @click="handleAction('block')"
               class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center space-x-3 transition-colors"
+              :class="{ 'bg-gray-100': isUserBlocked }"
             >
               <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
               </svg>
-              <span>Block this user</span>
+              <span>{{ isUserBlocked ? 'Unblock this user' : 'Block this user' }}</span>
             </button>
             <button
               @click="handleAction('report')"
@@ -127,6 +197,16 @@ function handleAction(action: string) {
         </div>
       </div>
     </div>
+    
+    <!-- Privacy Confirmation Modal -->
+    <PrivacyConfirmationModal
+      v-if="chatPartner"
+      :is-open="showPrivacyModal"
+      :action="privacyAction"
+      :user-name="chatPartner.name"
+      @confirm="handlePrivacyConfirm"
+      @cancel="handlePrivacyCancel"
+    />
   </div>
 </template>
 

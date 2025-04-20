@@ -126,3 +126,28 @@ export interface SettingsError {
   newEmail?: string
   confirmEmail?: string
 }
+
+export interface PrivacyState {
+  mutedUsers: string[]
+  blockedUsers: string[]
+  isLoading: boolean
+  error: string | null
+  successMessage: string | null
+}
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error'
+  read: boolean
+  timestamp: Date
+  link?: string
+}
+
+export interface NotificationState {
+  notifications: Notification[]
+  unreadCount: number
+  showToast: boolean
+  currentToast: Notification | null
+}

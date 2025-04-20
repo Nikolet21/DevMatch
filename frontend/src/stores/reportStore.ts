@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useNotificationStore } from './notificationStore'
 
 interface ReportForm {
   type: string
@@ -160,6 +161,15 @@ export const useReportStore = defineStore('report', {
         // TODO: Replace with actual API call
         await new Promise(resolve => setTimeout(resolve, 1000))
 
+        // Add notification for report submission
+        const notificationStore = useNotificationStore()
+        const reportType = this.form.type === 'user' ? 'User' : 'Content'
+        notificationStore.success(
+          `${reportType} Reported`, 
+          `Your report has been submitted successfully and will be reviewed by our team.`,
+          '/home'
+        )
+
         // Reset form after successful submission
         this.form = {
           type: 'user',
@@ -174,6 +184,11 @@ export const useReportStore = defineStore('report', {
 
         return true
       } catch (e) {
+        const notificationStore = useNotificationStore()
+        notificationStore.error(
+          'Report Failed', 
+          'Failed to submit report. Please try again later.'
+        )
         this.error = 'Failed to submit report. Please try again.'
         return false
       } finally {
