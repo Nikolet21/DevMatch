@@ -3,6 +3,7 @@ import type { Developer, Match, MatchState } from '../interfaces/interfaces'
 import { mockDevelopers, mockMatches } from '../data/mockData'
 import { useChatStore } from './chatStore'
 import { useNotificationStore } from './notificationStore'
+import { useActivityLogger } from '@/composables/useActivityLogger'
 
 export const useMatchStore = defineStore('match', {
   state: (): MatchState => ({
@@ -65,11 +66,15 @@ export const useMatchStore = defineStore('match', {
         )
 
         const notificationStore = useNotificationStore()
+        const { logMatchCreated, logMatchAccepted } = useActivityLogger()
 
         if (existingMatch) {
           // If there's a pending match, it means mutual like - auto accept
           await this.updateMatchStatus(existingMatch.id, 'accepted')
-          
+
+          // Log match acceptance
+          logMatchAccepted(developer.name, developer.id.toString())
+
           // Notification handled in updateMatchStatus
         } else {
           // Create new pending match
@@ -81,7 +86,10 @@ export const useMatchStore = defineStore('match', {
           }
           this.matches.push(newMatch)
           this.stats.likesSent++
-          
+
+          // Log that interest was shown (potential match)
+          logMatchCreated(developer.name, developer.id.toString())
+
           // Add notification for potential match
           notificationStore.info(
             'Interest Sent',
@@ -94,7 +102,7 @@ export const useMatchStore = defineStore('match', {
       } catch (error) {
         this.error = 'Failed to like developer'
         console.error(error)
-        
+
         // Add error notification
         const notificationStore = useNotificationStore()
         notificationStore.error(
@@ -117,6 +125,11 @@ export const useMatchStore = defineStore('match', {
         }
 
         this.matches.push(newMatch)
+
+        // Log match rejection
+        const { logMatchRejected } = useActivityLogger()
+        logMatchRejected(developer.name, developer.id.toString())
+
         this.moveToNextDeveloper()
       } catch (error) {
         this.error = 'Failed to pass developer'
@@ -181,9 +194,15 @@ export const useMatchStore = defineStore('match', {
         const match = this.matches.find(m => m.id === matchId)
         if (match) {
           match.status = status
+
+          const { logMatchAccepted, logMatchRejected } = useActivityLogger()
+
           if (status === 'accepted') {
             this.stats.totalMatches++
-            
+
+            // Log match acceptance
+            logMatchAccepted(match.developer.name, match.developer.id.toString())
+
             // Add notification for successful connection
             const notificationStore = useNotificationStore()
             notificationStore.success(
@@ -191,10 +210,13 @@ export const useMatchStore = defineStore('match', {
               `You've successfully connected with ${match.developer.name}. Start chatting now!`,
               `/chat/${match.developer.id}`
             )
-            
+
             // Initialize chat when match is accepted
             const chatStore = useChatStore()
             await chatStore.initializeChat(match.developer.id.toString())
+          } else if (status === 'rejected') {
+            // Log match rejection
+            logMatchRejected(match.developer.name, match.developer.id.toString())
           }
         }
       } catch (error) {
@@ -203,7 +225,7 @@ export const useMatchStore = defineStore('match', {
           'Connection Update Failed',
           'Failed to update connection status. Please try again later.'
         )
-        
+
         this.error = 'Failed to update match status'
         console.error(error)
       }

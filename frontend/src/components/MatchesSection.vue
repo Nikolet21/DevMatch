@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useMatchStore } from '@/stores/matchStore'
+import { useActivityLogger } from '@/composables/useActivityLogger'
 
 const matchStore = useMatchStore()
+const { logMatchAccepted } = useActivityLogger()
 const emit = defineEmits(['update:activeTab'])
 
 onMounted(async () => {

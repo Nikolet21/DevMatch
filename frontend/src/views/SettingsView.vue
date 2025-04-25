@@ -62,6 +62,11 @@ const updateFilter = () => {
   activityStore.updateFilter(selectedCategory.value as any, searchQuery.value)
 }
 
+// Explicitly refresh the activity logs
+const refreshActivityLogs = () => {
+  activityStore.loadActivityLogs()
+}
+
 // Watch for changes to search or category and update filters
 watch([searchQuery, selectedCategory], () => {
   updateFilter()
@@ -116,8 +121,11 @@ const handlePasswordChange = async () => {
   )
 
   if (!errors.value.password && !errors.value.general) {
-    // Log the password change
-    logPasswordChanged()
+    // Log the password change with timestamp and security info
+    logPasswordChanged({
+      securityInfo: 'Password changed through account settings',
+      timestamp: new Date().toISOString()
+    })
 
     currentPassword.value = ''
     newPassword.value = ''
@@ -136,8 +144,12 @@ const handleEmailChange = async () => {
   )
 
   if (!errors.value.email && !errors.value.general) {
-    // Log the email change
-    logEmailChanged(newEmail.value)
+    // Log the email change with additional details
+    logEmailChanged(newEmail.value, {
+      previousEmail: email.value,
+      securityInfo: 'Email address updated through account settings',
+      timestamp: new Date().toISOString()
+    })
 
     email.value = ''
     newEmail.value = ''
@@ -147,11 +159,17 @@ const handleEmailChange = async () => {
 
 const toggleMfa = () => {
   mfaEnabled.value = !mfaEnabled.value
-  // Log the MFA toggle
+  // Log the MFA toggle with additional security information
   if (mfaEnabled.value) {
-    logMfaEnabled()
+    logMfaEnabled({
+      securityInfo: 'Two-factor authentication enabled for account',
+      timestamp: new Date().toISOString()
+    })
   } else {
-    logMfaDisabled()
+    logMfaDisabled({
+      securityInfo: 'Two-factor authentication disabled for account',
+      timestamp: new Date().toISOString()
+    })
   }
   // In a real application, this would trigger MFA setup/disable process
 }
@@ -222,7 +240,7 @@ const formatDate = (date: Date) => {
               <span class="inline xs:hidden">MFA</span>
             </button>
             <button
-              @click="activeTab = 'activity'"
+              @click="activeTab = 'activity'; refreshActivityLogs()"
               class="px-4 sm:px-6 py-3 text-sm font-medium border-b-2 focus:outline-none whitespace-nowrap"
               :class="activeTab === 'activity' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
             >
@@ -494,7 +512,7 @@ const formatDate = (date: Date) => {
             <div class="flex justify-between items-center">
               <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 mb-1">Account Activity</h2>
               <button
-                @click="activityStore.loadActivityLogs()"
+                @click="refreshActivityLogs()"
                 class="px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-all duration-200"
               >
                 <font-awesome-icon icon="sync" class="mr-1" /> Refresh
@@ -581,7 +599,8 @@ const formatDate = (date: Date) => {
                             'bg-blue-100 text-blue-800': activity.category === 'Security',
                             'bg-purple-100 text-purple-800': activity.category === 'Profile',
                             'bg-green-100 text-green-800': activity.category === 'Matches',
-                            'bg-orange-100 text-orange-800': activity.category === 'Reports'
+                            'bg-orange-100 text-orange-800': activity.category === 'Reports',
+                            'bg-red-100 text-red-800': activity.category === 'Privacy'
                           }">
                           {{ activity.category }}
                         </span>
@@ -613,7 +632,8 @@ const formatDate = (date: Date) => {
                           'bg-blue-100 text-blue-800': activity.category === 'Security',
                           'bg-purple-100 text-purple-800': activity.category === 'Profile',
                           'bg-green-100 text-green-800': activity.category === 'Matches',
-                          'bg-orange-100 text-orange-800': activity.category === 'Reports'
+                          'bg-orange-100 text-orange-800': activity.category === 'Reports',
+                          'bg-red-100 text-red-800': activity.category === 'Privacy'
                         }">
                         {{ activity.category }}
                       </span>

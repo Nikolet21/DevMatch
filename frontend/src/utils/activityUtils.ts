@@ -24,6 +24,8 @@ export function generateActivityDescription(
       return 'Two-factor authentication was disabled';
     case 'Login Attempt Failed':
       return `Failed login attempt detected${metadata?.reason ? ` (${metadata.reason})` : ''}`;
+    case 'Account Deleted':
+      return 'Account has been permanently deleted';
     case 'Profile Updated':
       return 'Profile information was updated';
     case 'Profile Picture Updated':
@@ -36,6 +38,14 @@ export function generateActivityDescription(
       return `Match ${metadata?.userName ? `with ${metadata.userName}` : ''} was rejected`;
     case 'Report Submitted':
       return `Report submitted ${metadata?.type ? `for ${metadata.type}` : ''}`;
+    case 'User Muted':
+      return `User ${metadata?.userName || ''} was muted`;
+    case 'User Unmuted':
+      return `User ${metadata?.userName || ''} was unmuted`;
+    case 'User Blocked':
+      return `User ${metadata?.userName || ''} was blocked`;
+    case 'User Unblocked':
+      return `User ${metadata?.userName || ''} was unblocked`;
     default:
       return 'Activity recorded';
   }
@@ -86,6 +96,8 @@ export function getActivityIcon(category: ActivityCategory): string {
       return 'user-check';
     case 'Reports':
       return 'flag';
+    case 'Privacy':
+      return 'user-slash';
     default:
       return 'info-circle';
   }
@@ -104,6 +116,8 @@ export function getActivityColor(category: ActivityCategory): string {
       return 'text-green-500';
     case 'Reports':
       return 'text-orange-500';
+    case 'Privacy':
+      return 'text-red-500';
     default:
       return 'text-gray-500';
   }

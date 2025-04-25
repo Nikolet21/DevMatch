@@ -35,7 +35,13 @@ import {
   faFlag,
   faInbox,
   faChevronLeft,
-  faChevronRight
+  faChevronRight,
+  faEnvelope,
+  faSync,
+  faUserSlash,
+  faKey,
+  faLock,
+  faExclamationCircle
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
@@ -71,7 +77,13 @@ library.add(
   faFlag,
   faInbox,
   faChevronLeft,
-  faChevronRight
+  faChevronRight,
+  faEnvelope,
+  faSync,
+  faUserSlash,
+  faKey,
+  faLock,
+  faExclamationCircle
 )
 
 const app = createApp(App)

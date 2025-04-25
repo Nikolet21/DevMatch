@@ -31,29 +31,29 @@ export function useActivityLogger() {
   /**
    * Log a password change event
    */
-  const logPasswordChanged = () => {
-    activityStore.logActivity('Password Changed');
+  const logPasswordChanged = (metadata?: Record<string, any>) => {
+    activityStore.logActivity('Password Changed', metadata);
   };
 
   /**
    * Log an email change event
    */
-  const logEmailChanged = (newEmail?: string) => {
-    activityStore.logActivity('Email Changed', { newEmail });
+  const logEmailChanged = (newEmail?: string, metadata?: Record<string, any>) => {
+    activityStore.logActivity('Email Changed', { newEmail, ...metadata });
   };
 
   /**
    * Log an MFA enabled event
    */
-  const logMfaEnabled = () => {
-    activityStore.logActivity('MFA Enabled');
+  const logMfaEnabled = (metadata?: Record<string, any>) => {
+    activityStore.logActivity('MFA Enabled', metadata);
   };
 
   /**
    * Log an MFA disabled event
    */
-  const logMfaDisabled = () => {
-    activityStore.logActivity('MFA Disabled');
+  const logMfaDisabled = (metadata?: Record<string, any>) => {
+    activityStore.logActivity('MFA Disabled', metadata);
   };
 
   /**
@@ -99,6 +99,34 @@ export function useActivityLogger() {
   };
 
   /**
+   * Log a user muted event
+   */
+  const logUserMuted = (userName: string, userId?: string) => {
+    activityStore.logActivity('User Muted', { userName, userId });
+  };
+
+  /**
+   * Log a user unmuted event
+   */
+  const logUserUnmuted = (userName: string, userId?: string) => {
+    activityStore.logActivity('User Unmuted', { userName, userId });
+  };
+
+  /**
+   * Log a user blocked event
+   */
+  const logUserBlocked = (userName: string, userId?: string) => {
+    activityStore.logActivity('User Blocked', { userName, userId });
+  };
+
+  /**
+   * Log a user unblocked event
+   */
+  const logUserUnblocked = (userName: string, userId?: string) => {
+    activityStore.logActivity('User Unblocked', { userName, userId });
+  };
+
+  /**
    * Generic method to log any activity
    */
   const logActivity = (action: ActivityAction, metadata?: Record<string, any>) => {
@@ -119,6 +147,10 @@ export function useActivityLogger() {
     logMatchAccepted,
     logMatchRejected,
     logReportSubmitted,
+    logUserMuted,
+    logUserUnmuted,
+    logUserBlocked,
+    logUserUnblocked,
     logActivity
   };
 }

@@ -1,4 +1,4 @@
-export type ActivityCategory = 'Security' | 'Profile' | 'Matches' | 'Reports';
+export type ActivityCategory = 'Security' | 'Profile' | 'Matches' | 'Reports' | 'Privacy';
 
 export type ActivityAction =
   // Security actions
@@ -9,6 +9,7 @@ export type ActivityAction =
   | 'MFA Enabled'
   | 'MFA Disabled'
   | 'Login Attempt Failed'
+  | 'Account Deleted'
   // Profile actions
   | 'Profile Updated'
   | 'Profile Picture Updated'
@@ -17,7 +18,12 @@ export type ActivityAction =
   | 'Match Accepted'
   | 'Match Rejected'
   // Report actions
-  | 'Report Submitted';
+  | 'Report Submitted'
+  // Privacy actions
+  | 'User Muted'
+  | 'User Unmuted'
+  | 'User Blocked'
+  | 'User Unblocked';
 
 export interface ActivityLog {
   id: string;
@@ -38,6 +44,7 @@ export const actionCategoryMap: Record<ActivityAction, ActivityCategory> = {
   'MFA Enabled': 'Security',
   'MFA Disabled': 'Security',
   'Login Attempt Failed': 'Security',
+  'Account Deleted': 'Security',
   // Profile actions
   'Profile Updated': 'Profile',
   'Profile Picture Updated': 'Profile',
@@ -46,5 +53,10 @@ export const actionCategoryMap: Record<ActivityAction, ActivityCategory> = {
   'Match Accepted': 'Matches',
   'Match Rejected': 'Matches',
   // Report actions
-  'Report Submitted': 'Reports'
+  'Report Submitted': 'Reports',
+  // Privacy actions
+  'User Muted': 'Privacy',
+  'User Unmuted': 'Privacy',
+  'User Blocked': 'Privacy',
+  'User Unblocked': 'Privacy'
 };

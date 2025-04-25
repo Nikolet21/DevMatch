@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import type { PrivacyState } from '@/interfaces/interfaces'
 import { useNotificationStore } from './notificationStore'
+import { useActivityLogger } from '@/composables/useActivityLogger'
+import { useActivityStore } from '@/stores/activityStore'
 
 export const usePrivacyStore = defineStore('privacy', {
   state: (): PrivacyState => ({
@@ -26,7 +28,7 @@ export const usePrivacyStore = defineStore('privacy', {
       try {
         this.isLoading = true
         this.error = null
-        
+
         if (this.mutedUsers.includes(userId)) {
           this.successMessage = `${userName} is already muted`
           return
@@ -36,7 +38,11 @@ export const usePrivacyStore = defineStore('privacy', {
 
         this.mutedUsers.push(userId)
         this.successMessage = `${userName} has been muted`
-        
+
+        // Log the mute action directly with the activity store
+        const activityStore = useActivityStore()
+        activityStore.logActivity('User Muted', { userName, userId })
+
         const notificationStore = useNotificationStore()
         notificationStore.info(
           'User Muted',
@@ -45,11 +51,10 @@ export const usePrivacyStore = defineStore('privacy', {
 
         this.savePrivacySettings()
 
-        
       } catch (err) {
         this.error = 'Failed to mute user. Please try again.'
         console.error('Error muting user:', err)
-        
+
         const notificationStore = useNotificationStore()
         notificationStore.error(
           'Mute Failed',
@@ -57,7 +62,7 @@ export const usePrivacyStore = defineStore('privacy', {
         )
       } finally {
         this.isLoading = false
-        
+
         if (this.successMessage) {
           setTimeout(() => {
             this.successMessage = null
@@ -65,7 +70,7 @@ export const usePrivacyStore = defineStore('privacy', {
         }
       }
     },
-    
+
     async unmuteUser(userId: string, userName: string) {
       try {
         this.isLoading = true
@@ -81,6 +86,10 @@ export const usePrivacyStore = defineStore('privacy', {
         this.mutedUsers = this.mutedUsers.filter(id => id !== userId)
         this.successMessage = `${userName} has been unmuted`
 
+        // Log the unmute action directly with the activity store
+        const activityStore = useActivityStore()
+        activityStore.logActivity('User Unmuted', { userName, userId })
+
         const notificationStore = useNotificationStore()
         notificationStore.info(
           'User Unmuted',
@@ -89,7 +98,6 @@ export const usePrivacyStore = defineStore('privacy', {
 
         this.savePrivacySettings()
 
-        
       } catch (err) {
         this.error = 'Failed to unmute user. Please try again.'
         console.error('Error unmuting user:', err)
@@ -109,7 +117,7 @@ export const usePrivacyStore = defineStore('privacy', {
         }
       }
     },
-    
+
     async blockUser(userId: string, userName: string) {
       try {
         this.isLoading = true
@@ -125,6 +133,10 @@ export const usePrivacyStore = defineStore('privacy', {
         this.blockedUsers.push(userId)
         this.successMessage = `${userName} has been blocked`
 
+        // Log the block action directly with the activity store
+        const activityStore = useActivityStore()
+        activityStore.logActivity('User Blocked', { userName, userId })
+
         const notificationStore = useNotificationStore()
         notificationStore.warning(
           'User Blocked',
@@ -133,11 +145,10 @@ export const usePrivacyStore = defineStore('privacy', {
 
         this.savePrivacySettings()
 
-        
       } catch (err) {
         this.error = 'Failed to block user. Please try again.'
         console.error('Error blocking user:', err)
-        
+
         const notificationStore = useNotificationStore()
         notificationStore.error(
           'Block Failed',
@@ -145,7 +156,7 @@ export const usePrivacyStore = defineStore('privacy', {
         )
       } finally {
         this.isLoading = false
-        
+
         if (this.successMessage) {
           setTimeout(() => {
             this.successMessage = null
@@ -153,35 +164,38 @@ export const usePrivacyStore = defineStore('privacy', {
         }
       }
     },
-    
+
     async unblockUser(userId: string, userName: string) {
       try {
         this.isLoading = true
         this.error = null
-        
+
         if (!this.blockedUsers.includes(userId)) {
           this.successMessage = `${userName} is not blocked`
           return
         }
-        
+
         await new Promise(resolve => setTimeout(resolve, 500))
-        
+
         this.blockedUsers = this.blockedUsers.filter(id => id !== userId)
         this.successMessage = `${userName} has been unblocked`
-        
+
+        // Log the unblock action directly with the activity store
+        const activityStore = useActivityStore()
+        activityStore.logActivity('User Unblocked', { userName, userId })
+
         const notificationStore = useNotificationStore()
         notificationStore.info(
           'User Unblocked',
           `${userName} has been unblocked and can now interact with you.`
         )
-        
+
         this.savePrivacySettings()
-        
-        
+
       } catch (err) {
         this.error = 'Failed to unblock user. Please try again.'
         console.error('Error unblocking user:', err)
-        
+
         const notificationStore = useNotificationStore()
         notificationStore.error(
           'Unblock Failed',
@@ -202,16 +216,16 @@ export const usePrivacyStore = defineStore('privacy', {
       this.error = null
       this.successMessage = null
     },
-    
+
     loadPrivacySettings() {
       try {
         const storedMutedUsers = localStorage.getItem('mutedUsers')
         const storedBlockedUsers = localStorage.getItem('blockedUsers')
-        
+
         if (storedMutedUsers) {
           this.mutedUsers = JSON.parse(storedMutedUsers)
         }
-        
+
         if (storedBlockedUsers) {
           this.blockedUsers = JSON.parse(storedBlockedUsers)
         }
@@ -219,7 +233,7 @@ export const usePrivacyStore = defineStore('privacy', {
         console.error('Failed to load privacy settings from localStorage:', err)
       }
     },
-    
+
     // Save to localStorage for now, will be replaced with API calls
     savePrivacySettings() {
       try {
@@ -234,4 +248,4 @@ export const usePrivacyStore = defineStore('privacy', {
 
 // Initialize the store when imported
 const privacyStore = usePrivacyStore()
-privacyStore.loadPrivacySettings() 
+privacyStore.loadPrivacySettings()

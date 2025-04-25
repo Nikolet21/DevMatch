@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
 import { useReportStore } from '../stores/reportStore'
+import { useActivityLogger } from '@/composables/useActivityLogger'
 
 const router = useRouter()
 const route = useRoute()
 const reportStore = useReportStore()
+const { logReportSubmitted } = useActivityLogger()
 
 // Initialize store with route params and determine report type
 const targetId = route.params.targetId as string
@@ -24,6 +26,11 @@ if (!targetId) {
 const handleSubmit = async () => {
   const success = await reportStore.submitReport()
   if (success) {
+    // Log the report submission
+    logReportSubmitted(
+      reportStore.form.type,
+      reportStore.form.targetId.toString()
+    )
     router.push('/home')
   }
 }
@@ -89,8 +96,6 @@ const handleFileChange = (event: Event) => {
               </option>
             </select>
           </div>
-
-
 
           <!-- Description Field -->
           <div>
