@@ -15,7 +15,7 @@ const hideToast = () => {
 
 const getIcon = computed(() => {
   if (!toast.value) return faInfoCircle
-  
+
   switch (toast.value.type) {
     case 'success':
       return faCheckCircle
@@ -30,7 +30,7 @@ const getIcon = computed(() => {
 
 const getToastClass = computed(() => {
   if (!toast.value) return 'bg-blue-100 border-blue-500'
-  
+
   switch (toast.value.type) {
     case 'success':
       return 'bg-green-100 border-green-500'
@@ -45,7 +45,7 @@ const getToastClass = computed(() => {
 
 const getIconClass = computed(() => {
   if (!toast.value) return 'text-blue-500'
-  
+
   switch (toast.value.type) {
     case 'success':
       return 'text-green-500'
@@ -99,7 +99,7 @@ const navigateToLink = () => {
   </Transition>
 </template>
 
-<style>
+<style scoped>
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.3s ease;
@@ -112,4 +112,4 @@ const navigateToLink = () => {
   transform: translateY(-30px);
   opacity: 0;
 }
-</style> 
+</style>

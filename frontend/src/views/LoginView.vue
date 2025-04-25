@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
+import type { LoginFormErrors, RegisterFormErrors } from '@/utils/validation'
+import {
+  validateLoginForm,
+  validateRegisterForm,
+  validatePasswordRequirements
+} from '@/utils/validation'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -9,21 +15,12 @@ const activeTab = ref('login')
 const isLoading = computed(() => userStore.isLoading)
 const storeError = computed(() => userStore.error)
 
-interface FormErrors {
-  email?: string
-  password?: string
-  confirmPassword?: string
-  firstName?: string
-  lastName?: string
-}
-
 const loginForm = reactive({
   email: '',
-  password: '',
-  rememberMe: false
+  password: ''
 })
 
-const loginErrors = reactive<FormErrors>({})
+const loginErrors = reactive<LoginFormErrors>({})
 
 const registerForm = reactive({
   firstName: '',
@@ -33,90 +30,42 @@ const registerForm = reactive({
   confirmPassword: ''
 })
 
-const registerErrors = reactive<FormErrors>({})
+const registerErrors = reactive<RegisterFormErrors>({})
 
-const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
+// Password validation requirements
+const passwordRequirements = reactive({
+  length: false,
+  uppercase: false,
+  lowercase: false,
+  number: false,
+  special: false
+})
+
+// Watch password changes to update requirements status
+watch(() => registerForm.password, (newPassword) => {
+  const requirements = validatePasswordRequirements(newPassword)
+  Object.assign(passwordRequirements, requirements)
+})
+
+const validateLoginFormLocal = (): boolean => {
+  const errors = validateLoginForm(loginForm)
+  Object.assign(loginErrors, errors)
+  return Object.keys(errors).length === 0
 }
 
-const validatePassword = (password: string): boolean => {
-  return password.length >= 8
-}
-
-const validateLoginForm = (): boolean => {
-  loginErrors.email = ''
-  loginErrors.password = ''
-  let isValid = true
-
-  if (!loginForm.email) {
-    loginErrors.email = 'Email is required'
-    isValid = false
-  } else if (!validateEmail(loginForm.email)) {
-    loginErrors.email = 'Please enter a valid email address'
-    isValid = false
-  }
-
-  if (!loginForm.password) {
-    loginErrors.password = 'Password is required'
-    isValid = false
-  }
-
-  return isValid
-}
-
-const validateRegisterForm = (): boolean => {
-  registerErrors.firstName = ''
-  registerErrors.lastName = ''
-  registerErrors.email = ''
-  registerErrors.password = ''
-  registerErrors.confirmPassword = ''
-  let isValid = true
-
-  if (!registerForm.firstName.trim()) {
-    registerErrors.firstName = 'First name is required'
-    isValid = false
-  }
-
-  if (!registerForm.lastName.trim()) {
-    registerErrors.lastName = 'Last name is required'
-    isValid = false
-  }
-
-  if (!registerForm.email) {
-    registerErrors.email = 'Email is required'
-    isValid = false
-  } else if (!validateEmail(registerForm.email)) {
-    registerErrors.email = 'Please enter a valid email address'
-    isValid = false
-  }
-
-  if (!registerForm.password) {
-    registerErrors.password = 'Password is required'
-    isValid = false
-  } else if (!validatePassword(registerForm.password)) {
-    registerErrors.password = 'Password must be at least 8 characters long'
-    isValid = false
-  }
-
-  if (!registerForm.confirmPassword) {
-    registerErrors.confirmPassword = 'Please confirm your password'
-    isValid = false
-  } else if (registerForm.password !== registerForm.confirmPassword) {
-    registerErrors.confirmPassword = 'Passwords do not match'
-    isValid = false
-  }
-
-  return isValid
+const validateRegisterFormLocal = (): boolean => {
+  const errors = validateRegisterForm(registerForm)
+  Object.assign(registerErrors, errors)
+  return Object.keys(errors).length === 0
 }
 
 const handleLogin = async () => {
   if (isLoading.value) return
 
-  if (!validateLoginForm()) return
+  if (!validateLoginFormLocal()) return
 
   try {
-    await userStore.login(loginForm.email, loginForm.password, loginForm.rememberMe)
+    await userStore.login(loginForm.email, loginForm.password)
     router.push('/home')
   } catch (error) {
     loginErrors.email = storeError.value || undefined
@@ -128,7 +77,7 @@ const handleLogin = async () => {
 const handleRegister = async () => {
   if (isLoading.value) return
 
-  if (!validateRegisterForm()) return
+  if (!validateRegisterFormLocal()) return
 
   try {
     await userStore.register({
@@ -145,24 +94,25 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/10 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+  <div class="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/10 flex items-center justify-center px-2 sm:px-4 md:px-6 lg:px-8 relative overflow-hidden">
     <div class="absolute inset-0 bg-grid-primary/5 [mask-image:linear-gradient(to_bottom,transparent,black,transparent)]" style="background-size: 30px 30px;"></div>
+
     <!-- Left Column: Illustration and Text -->
-    <div class="hidden lg:flex lg:w-1/2 lg:flex-col lg:items-center lg:justify-center lg:pr-8 relative z-10">
-      <img src="@/assets/login-illustration.svg" alt="Developer Illustration" class="w-full max-w-lg mb-8 transform hover:scale-105 transition-transform duration-300 ease-out" />
-      <h1 class="text-4xl font-bold text-text-primary mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">Connect. Collaborate. Code.</h1>
-      <p class="text-xl text-text-secondary text-center max-w-md animate-fade-in">
+    <div class="hidden lg:flex lg:w-1/2 lg:flex-col lg:items-center lg:justify-center lg:pr-4 xl:pr-8 relative z-10">
+      <img src="@/assets/login-illustration.svg" alt="Developer Illustration" class="w-full max-w-md xl:max-w-lg mb-6 xl:mb-8 transform hover:scale-105 transition-transform duration-300 ease-out" />
+      <h1 class="text-3xl xl:text-4xl font-bold text-text-primary mb-3 xl:mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">Connect. Collaborate. Code.</h1>
+      <p class="text-lg xl:text-xl text-text-secondary text-center max-w-md animate-fade-in">
         Join our community of passionate developers and find your perfect coding partner. Start building amazing projects together.
       </p>
     </div>
 
     <!-- Right Column: Authentication Forms -->
-    <div class="w-full max-w-xl lg:w-1/2 lg:max-w-2xl relative z-10">
-      <div class="bg-card/90 backdrop-blur-sm py-16 px-8 shadow-xl ring-1 ring-gray-900/5 sm:rounded-xl transition-all duration-300 hover:shadow-2xl hover:bg-card/95">
-        <h2 class="text-center text-3xl font-bold tracking-tight text-text-primary mb-8">{{ activeTab === 'login' ? 'Welcome Back' : 'Create Account' }}</h2>
+    <div class="w-full max-w-xs sm:max-w-xs md:max-w-sm lg:w-5/12 lg:max-w-md relative z-10">
+      <div class="bg-card/90 backdrop-blur-sm py-6 sm:py-8 lg:py-10 px-4 sm:px-5 lg:px-6 shadow-xl ring-1 ring-gray-900/5 rounded-xl transition-all duration-300 hover:shadow-2xl hover:bg-card/95">
+        <h2 class="text-center text-xl sm:text-2xl font-bold tracking-tight text-text-primary mb-5 sm:mb-6">{{ activeTab === 'login' ? 'Welcome Back' : 'Create Account' }}</h2>
 
         <!-- Login Form -->
-        <form v-if="activeTab === 'login'" @submit.prevent="handleLogin" class="space-y-8">
+        <form v-if="activeTab === 'login'" @submit.prevent="handleLogin" class="space-y-5">
           <div>
             <label for="email" class="block text-sm font-medium text-text-primary">Email</label>
             <div class="mt-1">
@@ -171,9 +121,9 @@ const handleRegister = async () => {
                 v-model="loginForm.email"
                 placeholder="Enter your email"
                 :class="{'ring-red-500': loginErrors.email}"
-                class="block w-full rounded-md border-0 py-3.5 px-4 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                class="block w-full rounded-md border-0 py-2.5 px-3 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
               />
-              <p v-if="loginErrors.email" class="mt-2 text-sm text-red-600">{{ loginErrors.email }}</p>
+              <p v-if="loginErrors.email" class="mt-1 text-xs sm:text-sm text-red-600">{{ loginErrors.email }}</p>
             </div>
           </div>
 
@@ -186,26 +136,14 @@ const handleRegister = async () => {
                 type="password"
                 placeholder="Enter your password"
                 :class="{'ring-red-500': loginErrors.password}"
-                class="block w-full rounded-md border-0 py-3.5 px-4 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                class="block w-full rounded-md border-0 py-2.5 px-3 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
               />
-              <p v-if="loginErrors.password" class="mt-2 text-sm text-red-600">{{ loginErrors.password }}</p>
+              <p v-if="loginErrors.password" class="mt-1 text-xs sm:text-sm text-red-600">{{ loginErrors.password }}</p>
             </div>
           </div>
 
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <input
-                id="remember-me"
-                v-model="loginForm.rememberMe"
-                type="checkbox"
-                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary transition-colors duration-200 cursor-pointer hover:border-primary"
-              />
-              <label for="remember-me" class="ml-2 block text-sm text-text-secondary">Remember me</label>
-            </div>
-
-            <div class="text-sm">
-              <a href="#" class="font-medium text-primary hover:text-primary/80">Forgot password?</a>
-            </div>
+          <div class="text-right">
+            <a href="#" class="font-medium text-primary text-sm hover:text-primary/80">Forgot password?</a>
           </div>
 
           <div>
@@ -255,8 +193,8 @@ const handleRegister = async () => {
         </form>
 
         <!-- Registration Form -->
-        <form v-if="activeTab === 'register'" @submit.prevent="handleRegister" class="space-y-8">
-          <div class="grid grid-cols-2 gap-4">
+        <form v-if="activeTab === 'register'" @submit.prevent="handleRegister" class="space-y-4 sm:space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label for="firstName" class="block text-sm font-medium text-text-primary">First Name</label>
               <div class="mt-1">
@@ -264,9 +202,9 @@ const handleRegister = async () => {
                   id="firstName"
                   v-model="registerForm.firstName"
                   :class="{'ring-red-500': registerErrors.firstName}"
-                  class="block w-full rounded-md border-0 py-3 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                  class="block w-full rounded-md border-0 py-2 sm:py-2.5 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
                 />
-                <p v-if="registerErrors.firstName" class="mt-2 text-sm text-red-600">{{ registerErrors.firstName }}</p>
+                <p v-if="registerErrors.firstName" class="mt-1 text-xs text-red-600">{{ registerErrors.firstName }}</p>
               </div>
             </div>
 
@@ -277,9 +215,9 @@ const handleRegister = async () => {
                   id="lastName"
                   v-model="registerForm.lastName"
                   :class="{'ring-red-500': registerErrors.lastName}"
-                  class="block w-full rounded-md border-0 py-3 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                  class="block w-full rounded-md border-0 py-2 sm:py-2.5 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
                 />
-                <p v-if="registerErrors.lastName" class="mt-2 text-sm text-red-600">{{ registerErrors.lastName }}</p>
+                <p v-if="registerErrors.lastName" class="mt-1 text-xs text-red-600">{{ registerErrors.lastName }}</p>
               </div>
             </div>
           </div>
@@ -291,9 +229,9 @@ const handleRegister = async () => {
                 id="register-email"
                 v-model="registerForm.email"
                 :class="{'ring-red-500': registerErrors.email}"
-                class="block w-full rounded-md border-0 py-3 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                class="block w-full rounded-md border-0 py-2 sm:py-2.5 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
               />
-              <p v-if="registerErrors.email" class="mt-2 text-sm text-red-600">{{ registerErrors.email }}</p>
+              <p v-if="registerErrors.email" class="mt-1 text-xs text-red-600">{{ registerErrors.email }}</p>
             </div>
           </div>
 
@@ -305,9 +243,91 @@ const handleRegister = async () => {
                 v-model="registerForm.password"
                 type="password"
                 :class="{'ring-red-500': registerErrors.password}"
-                class="block w-full rounded-md border-0 py-3 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                class="block w-full rounded-md border-0 py-2 sm:py-2.5 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
               />
-              <p v-if="registerErrors.password" class="mt-2 text-sm text-red-600">{{ registerErrors.password }}</p>
+              <p v-if="registerErrors.password" class="mt-1 text-xs text-red-600">{{ registerErrors.password }}</p>
+
+              <!-- Password Requirements List -->
+              <div class="mt-2 space-y-1 text-xs">
+                <p class="text-text-secondary font-medium">Password requirements:</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0.5">
+                  <div class="flex items-center space-x-1.5">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      :class="passwordRequirements.length ? 'text-green-500' : 'text-gray-400'"
+                      class="h-3 w-3 transition-colors duration-200 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span :class="passwordRequirements.length ? 'text-text-primary' : 'text-text-secondary'">
+                      Minimum 8 characters
+                    </span>
+                  </div>
+                  <div class="flex items-center space-x-1.5">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      :class="passwordRequirements.uppercase ? 'text-green-500' : 'text-gray-400'"
+                      class="h-3 w-3 transition-colors duration-200 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span :class="passwordRequirements.uppercase ? 'text-text-primary' : 'text-text-secondary'">
+                      At least 1 uppercase
+                    </span>
+                  </div>
+                  <div class="flex items-center space-x-1.5">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      :class="passwordRequirements.lowercase ? 'text-green-500' : 'text-gray-400'"
+                      class="h-3 w-3 transition-colors duration-200 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span :class="passwordRequirements.lowercase ? 'text-text-primary' : 'text-text-secondary'">
+                      At least 1 lowercase
+                    </span>
+                  </div>
+                  <div class="flex items-center space-x-1.5">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      :class="passwordRequirements.number ? 'text-green-500' : 'text-gray-400'"
+                      class="h-3 w-3 transition-colors duration-200 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span :class="passwordRequirements.number ? 'text-text-primary' : 'text-text-secondary'">
+                      At least 1 number
+                    </span>
+                  </div>
+                  <div class="flex items-center space-x-1.5 md:col-span-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      :class="passwordRequirements.special ? 'text-green-500' : 'text-gray-400'"
+                      class="h-3 w-3 transition-colors duration-200 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span :class="passwordRequirements.special ? 'text-text-primary' : 'text-text-secondary'">
+                      At least 1 special character
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -319,9 +339,9 @@ const handleRegister = async () => {
                 v-model="registerForm.confirmPassword"
                 type="password"
                 :class="{'ring-red-500': registerErrors.confirmPassword}"
-                class="block w-full rounded-md border-0 py-3 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                class="block w-full rounded-md border-0 py-2 sm:py-2.5 px-3 text-text-primary shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
               />
-              <p v-if="registerErrors.confirmPassword" class="mt-2 text-sm text-red-600">{{ registerErrors.confirmPassword }}</p>
+              <p v-if="registerErrors.confirmPassword" class="mt-1 text-xs text-red-600">{{ registerErrors.confirmPassword }}</p>
             </div>
           </div>
 
@@ -329,7 +349,7 @@ const handleRegister = async () => {
             <button
               type="submit"
               :disabled="isLoading"
-              class="flex w-full justify-center rounded-md bg-primary px-3 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-primary/90 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-70"
+              class="flex w-full justify-center rounded-md bg-primary px-3 py-2 sm:py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-primary/90 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-70"
             >
               <span :class="{ 'opacity-0': isLoading }">Create Account</span>
               <div
@@ -337,7 +357,7 @@ const handleRegister = async () => {
                 class="absolute inset-0 flex items-center justify-center"
               >
                 <svg
-                  class="animate-spin h-5 w-5 text-white"
+                  class="animate-spin h-4 w-4 text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -358,7 +378,7 @@ const handleRegister = async () => {
                 </svg>
               </div>
             </button>
-            <p class="mt-4 text-center text-sm text-text-secondary">
+            <p class="mt-3 text-center text-xs text-text-secondary">
               Already have an account?
               <button
                 type="button"
