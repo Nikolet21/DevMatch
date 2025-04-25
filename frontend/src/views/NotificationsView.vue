@@ -14,9 +14,8 @@ const hasNotifications = computed(() => notifications.value.length > 0)
 const hasUnread = computed(() => notificationStore.hasUnread)
 
 const navigateToLink = (link: string | undefined) => {
-  if (link) {
-    router.push(link)
-  }
+  // We're already on the notifications page, so just mark as read
+  // No navigation needed
 }
 
 const formatDate = (date: Date) => {
@@ -77,7 +76,7 @@ const clearAllNotifications = () => {
 const generateDemoNotifications = () => {
   // Clear existing notifications first
   notificationStore.clearAllNotifications();
-  
+
   // Add mock notifications from the mockData file
   mockNotifications.forEach(notification => {
     notificationStore.addNotification({
@@ -86,7 +85,7 @@ const generateDemoNotifications = () => {
       id: undefined
     });
   });
-  
+
   // Mark notifications that should be read as read
   notificationStore.notifications
     .filter(n => {
@@ -108,8 +107,8 @@ onMounted(() => {
       <div class="bg-white rounded-xl shadow-lg overflow-hidden p-6">
         <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
           <div class="flex items-center">
-            <button 
-              @click="router.push('/home')" 
+            <button
+              @click="router.push('/home')"
               class="mr-4 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg p-2 transition-all duration-200"
             >
               <font-awesome-icon icon="arrow-left" class="text-sm" />
@@ -158,14 +157,6 @@ onMounted(() => {
                   <span class="text-sm text-gray-500 ml-2">{{ formatDate(notification.timestamp) }}</span>
                 </div>
                 <p class="text-text-secondary mt-1">{{ notification.message }}</p>
-                <div v-if="notification.link" class="mt-2">
-                  <button
-                    @click.stop="navigateToLink(notification.link)"
-                    class="text-sm text-primary hover:text-primary/80 hover:underline transition-colors duration-200 font-medium"
-                  >
-                    View details
-                  </button>
-                </div>
               </div>
               <button
                 @click.stop="notificationStore.removeNotification(notification.id)"
@@ -185,9 +176,9 @@ onMounted(() => {
           <font-awesome-icon :icon="faBell" class="text-5xl mb-4 text-gray-300" />
           <p class="text-lg">You have no notifications</p>
           <p class="text-sm text-gray-400 mt-2">When you receive notifications, they will appear here</p>
-          
-          <button 
-            @click="generateDemoNotifications" 
+
+          <button
+            @click="generateDemoNotifications"
             class="mt-6 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-sm font-medium transition-all duration-200"
           >
             Generate Demo Notifications
@@ -196,4 +187,4 @@ onMounted(() => {
       </div>
     </div>
   </div>
-</template> 
+</template>
