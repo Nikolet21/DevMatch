@@ -3,8 +3,10 @@ import { useNotificationStore } from '@/stores/notificationStore'
 import { computed } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faInfoCircle, faCheckCircle, faExclamationTriangle, faTimesCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { useRouter } from 'vue-router'
 
 const notificationStore = useNotificationStore()
+const router = useRouter()
 
 const visible = computed(() => notificationStore.showToast)
 const toast = computed(() => notificationStore.currentToast)
@@ -59,10 +61,8 @@ const getIconClass = computed(() => {
 })
 
 const navigateToLink = () => {
-  if (toast.value?.link) {
-    window.location.href = toast.value.link
-    hideToast()
-  }
+  router.push('/notifications')
+  hideToast()
 }
 </script>
 
@@ -79,12 +79,12 @@ const navigateToLink = () => {
       <div class="flex-1">
         <div class="font-bold">{{ toast.title }}</div>
         <div>{{ toast.message }}</div>
-        <div v-if="toast.link" class="mt-2">
+        <div class="mt-2">
           <button
             @click="navigateToLink"
             class="text-sm underline text-blue-600 hover:text-blue-800"
           >
-            View details
+            View All Notifications
           </button>
         </div>
       </div>
