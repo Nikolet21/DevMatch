@@ -2,11 +2,13 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '../../stores/userStore'
 import { useProfileStore } from '../../stores/profileStore'
+import { useActivityLogger } from '@/composables/useActivityLogger'
 import ImagePreviewModal from './ImagePreviewModal.vue'
 import { validateProfileForm, type ProfileFormErrors } from '../../utils/validation'
 
 const userStore = useUserStore()
 const profileStore = useProfileStore()
+const { logProfileUpdated, logProfilePictureUpdated, logActivity } = useActivityLogger()
 const newSkill = ref('')
 const imageCaption = ref('')
 const photoUploadInput = ref<HTMLInputElement | null>(null)
@@ -35,6 +37,8 @@ const handleImageUpload = async (event: Event) => {
     reader.onload = (e) => {
       if (e.target?.result) {
         profileStore.addImage(e.target.result as string, imageCaption.value)
+        // Log image upload
+        logProfilePictureUpdated()
         imageCaption.value = ''
       }
     }
@@ -94,6 +98,26 @@ const saveProfile = async () => {
     }
 
     await profileStore.updateProfile(updatedProfile)
+
+    // Log profile update with changed fields
+    const updatedFields = [];
+    if (profileStore.profile?.firstName !== updatedProfile.firstName) updatedFields.push('firstName');
+    if (profileStore.profile?.lastName !== updatedProfile.lastName) updatedFields.push('lastName');
+    if (profileStore.profile?.bio !== updatedProfile.bio) updatedFields.push('bio');
+    if (profileStore.profile?.githubUrl !== updatedProfile.githubUrl) updatedFields.push('githubUrl');
+    if (profileStore.profile?.linkedinUrl !== updatedProfile.linkedinUrl) updatedFields.push('linkedinUrl');
+    if (profileStore.profile?.skills.join() !== updatedProfile.skills.join()) updatedFields.push('skills');
+
+    console.log('Updated fields:', updatedFields);
+
+    if (updatedFields.length > 0) {
+      // Direct activity logging to ensure it works
+      logActivity('Profile Updated', {
+        fields: updatedFields,
+        message: `Updated profile fields: ${updatedFields.join(', ')}`
+      });
+    }
+
     userStore.$patch({
       user: {
         firstName: updatedProfile.firstName,

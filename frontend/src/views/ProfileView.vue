@@ -2,6 +2,7 @@
 import { ref, defineAsyncComponent } from 'vue'
 import { useUserStore } from '../stores/userStore'
 import { useProfileStore } from '../stores/profileStore'
+import { useActivityLogger } from '@/composables/useActivityLogger'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -12,6 +13,7 @@ const ImagePreviewModal = defineAsyncComponent(() => import('../components/modal
 
 const userStore = useUserStore()
 const profileStore = useProfileStore()
+const { logProfilePictureUpdated } = useActivityLogger()
 const imageCaption = ref('')
 const photoUploadInput = ref<HTMLInputElement | null>(null)
 const avatarInput = ref<HTMLInputElement | null>(null)
@@ -32,6 +34,7 @@ const handleImageUpload = async (event: Event) => {
     reader.onload = (e) => {
       if (e.target?.result) {
         profileStore.addImage(e.target.result as string, imageCaption.value)
+        logProfilePictureUpdated()
         imageCaption.value = ''
       }
     }
@@ -67,6 +70,7 @@ const triggerFileUpload = () => {
 const confirmAvatarUpdate = async () => {
   if (selectedImage.value && selectedImage.value.id === 'avatar') {
     await userStore.updateAvatar(selectedImage.value.url)
+    logProfilePictureUpdated()
     selectedImage.value = null
   }
 }

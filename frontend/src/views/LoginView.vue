@@ -8,9 +8,11 @@ import {
   validateRegisterForm,
   validatePasswordRequirements
 } from '@/utils/validation'
+import { useActivityLogger } from '@/composables/useActivityLogger'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { logActivity } = useActivityLogger()
 const activeTab = ref('login')
 const isLoading = computed(() => userStore.isLoading)
 const storeError = computed(() => userStore.error)
@@ -66,8 +68,20 @@ const handleLogin = async () => {
 
   try {
     await userStore.login(loginForm.email, loginForm.password)
+
+    // Log successful login
+    logActivity('Login', {
+      email: loginForm.email
+    })
+
     router.push('/home')
   } catch (error) {
+    // Log failed login attempt
+    logActivity('Login Attempt Failed', {
+      reason: 'Invalid credentials',
+      email: loginForm.email
+    })
+
     loginErrors.email = storeError.value || undefined
     loginErrors.password = storeError.value || undefined
     console.error('Login error:', error)
@@ -86,8 +100,21 @@ const handleRegister = async () => {
       email: registerForm.email,
       password: registerForm.password
     })
+
+    // Log account creation
+    logActivity('Login', {
+      email: registerForm.email,
+      description: `New user registered with email: ${registerForm.email}`
+    })
+
     router.push('/home')
   } catch (error) {
+    // Log registration error
+    logActivity('Login Attempt Failed', {
+      reason: 'Registration error',
+      email: registerForm.email
+    })
+
     console.error('Registration error:', error)
   }
 }
