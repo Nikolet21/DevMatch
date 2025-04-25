@@ -6,6 +6,99 @@ import messagingSystem from '../assets/messaging-system.svg'
 
 export { defaultAvatar }
 
+// Report interface
+export interface Report {
+  id: number
+  reporterId: string
+  reporterName: string
+  targetId: string
+  targetName: string
+  reason: string
+  description: string
+  status: 'pending' | 'investigating' | 'resolved'
+  dateSubmitted: Date
+  resolvedDate?: Date
+  resolution?: string
+  priority: 'high' | 'medium' | 'low'
+}
+
+// Admin account
+export const adminAccount = {
+  email: 'admin@devmatch.com',
+  password: 'Admin@123',
+  firstName: 'DevMatch',
+  lastName: 'Administrator',
+  role: 'admin'
+}
+
+// Mock reports data for admin panel
+export const mockReports: Report[] = [
+  {
+    id: 1,
+    reporterId: 'user123',
+    reporterName: 'John Smith',
+    targetId: 'user456',
+    targetName: 'Michael Johnson',
+    reason: 'Inappropriate messages',
+    description: 'Sent messages containing offensive content and spam.',
+    status: 'pending',
+    dateSubmitted: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    priority: 'high'
+  },
+  {
+    id: 2,
+    reporterId: 'user789',
+    reporterName: 'Emma Wilson',
+    targetId: 'user321',
+    targetName: 'David Lee',
+    reason: 'Fake profile',
+    description: 'Profile information doesn\'t match with the person\'s actual details.',
+    status: 'resolved',
+    dateSubmitted: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    resolvedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    resolution: 'Profile removed',
+    priority: 'medium'
+  },
+  {
+    id: 3,
+    reporterId: 'user654',
+    reporterName: 'Sarah Johnson',
+    targetId: 'user987',
+    targetName: 'Robert Brown',
+    reason: 'Harassment',
+    description: 'Continuous unwanted messages despite being asked to stop.',
+    status: 'pending',
+    dateSubmitted: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    priority: 'high'
+  },
+  {
+    id: 4,
+    reporterId: 'user246',
+    reporterName: 'Daniel Martinez',
+    targetId: 'user135',
+    targetName: 'Jason Wilson',
+    reason: 'Inappropriate project suggestion',
+    description: 'Suggested illegal project and requested collaboration.',
+    status: 'investigating',
+    dateSubmitted: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    priority: 'medium'
+  },
+  {
+    id: 5,
+    reporterId: 'user579',
+    reporterName: 'Olivia Davis',
+    targetId: 'user864',
+    targetName: 'Laura Thompson',
+    reason: 'Unresponsiveness',
+    description: 'Agreed to collaborate but never responded to messages.',
+    status: 'resolved',
+    dateSubmitted: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+    resolvedDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+    resolution: 'Warning issued',
+    priority: 'low'
+  }
+]
+
 export const mockUsers: UserRegistrationData[] = [
   {
     firstName: 'Nicole Keith',
@@ -336,7 +429,7 @@ export const mockNotifications: Notification[] = [
     message: 'John Smith sent you a message',
     type: 'info',
     read: false,
-    timestamp: new Date(Date.now() - 5 * 60 * 1000), 
+    timestamp: new Date(Date.now() - 5 * 60 * 1000),
     link: '/home/chat'
   },
   {
@@ -345,7 +438,7 @@ export const mockNotifications: Notification[] = [
     message: 'Your profile has been successfully updated',
     type: 'success',
     read: false,
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), 
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
     link: '/profile'
   },
   {
@@ -354,7 +447,7 @@ export const mockNotifications: Notification[] = [
     message: 'Your premium subscription will end in 3 days',
     type: 'warning',
     read: true,
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), 
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
     link: '/settings'
   },
   {
@@ -363,7 +456,7 @@ export const mockNotifications: Notification[] = [
     message: 'Your last payment method was declined',
     type: 'error',
     read: true,
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 
+    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
     link: '/settings'
   },
   {

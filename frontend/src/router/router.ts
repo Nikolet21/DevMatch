@@ -67,7 +67,18 @@ const router = createRouter({
       meta: { requiresAuth: true },
       props: true
     },
-
+    {
+      path: '/admin-portal',
+      name: 'admin-portal',
+      component: () => import('../views/AdminPortalView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../views/AdminView.vue'),
+      meta: { requiresAdminAuth: true }
+    },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -84,6 +95,18 @@ router.beforeEach(async (to, from, next) => {
   // Check for stored authentication
   if (!userStore.isAuthenticated) {
     await userStore.checkAuth()
+  }
+
+  // Check for admin routes
+  if (to.meta.requiresAdminAuth) {
+    const isAdminAuthenticated = localStorage.getItem('adminAuthenticated') === 'true' ||
+                                sessionStorage.getItem('adminAuthenticated') === 'true'
+    if (!isAdminAuthenticated) {
+      next('/admin-login')
+      return
+    }
+    next()
+    return
   }
 
   if (to.meta.requiresAuth && !userStore.isAuthenticated) {
