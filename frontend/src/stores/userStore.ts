@@ -54,6 +54,7 @@ export const useUserStore = defineStore('user', {
         const mockDeveloper = mockDevelopers.find(dev => dev.email === email)
 
         this.user = {
+          id: 'currentUser',
           firstName: mockUser.firstName,
           lastName: mockUser.lastName,
           email: mockUser.email,
@@ -63,6 +64,7 @@ export const useUserStore = defineStore('user', {
         // Initialize profile with developer data if available
         const profileStore = useProfileStore()
         profileStore.setProfile({
+          id: 'currentUser',
           firstName: mockUser.firstName,
           lastName: mockUser.lastName,
           email: mockUser.email,
@@ -96,6 +98,8 @@ export const useUserStore = defineStore('user', {
             }
           }))
         }
+
+        console.log("User logged in with ID:", this.user.id)
       } catch (error) {
         this.error = 'Invalid email or password'
         throw error
@@ -112,6 +116,7 @@ export const useUserStore = defineStore('user', {
         await new Promise(resolve => setTimeout(resolve, 1000))
         const mockDeveloper = mockDevelopers.find(dev => dev.email === userData.email)
         this.user = {
+          id: 'currentUser',
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
@@ -121,6 +126,8 @@ export const useUserStore = defineStore('user', {
         this.token = 'dummy-token'
         sessionStorage.setItem('token', this.token)
         sessionStorage.setItem('user', JSON.stringify(this.user))
+
+        console.log("User registered with ID:", this.user.id)
       } catch (error) {
         this.error = 'Registration failed. Please try again.'
         throw error
@@ -152,6 +159,7 @@ export const useUserStore = defineStore('user', {
         this.token = token
         const mockDeveloper = mockDevelopers.find(dev => dev.email === userData.email)
         this.user = {
+          id: 'currentUser',
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
@@ -162,6 +170,7 @@ export const useUserStore = defineStore('user', {
         // Initialize profile store with stored profile data
         const profileStore = useProfileStore()
         profileStore.setProfile({
+          id: 'currentUser',
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,

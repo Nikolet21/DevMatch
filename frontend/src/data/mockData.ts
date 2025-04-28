@@ -1,26 +1,11 @@
-import type { Developer, Chat, ChatPartner, ChatMessage, User, UserRegistrationData, Notification } from '../interfaces/interfaces'
+import type { Developer, Chat, ChatPartner, ChatMessage, User, UserRegistrationData, Notification, Swipe, DbMatch, Report } from '../interfaces/interfaces'
 import defaultAvatar from '../assets/default-avatar.svg'
 import developerProfiles from '../assets/developer-profiles.svg'
 import matchingFunctionality from '../assets/matching-functionality.svg'
 import messagingSystem from '../assets/messaging-system.svg'
+import { v4 as uuidv4 } from 'uuid'
 
 export { defaultAvatar }
-
-// Report interface
-export interface Report {
-  id: number
-  reporterId: string
-  reporterName: string
-  targetId: string
-  targetName: string
-  reason: string
-  description: string
-  status: 'pending' | 'investigating' | 'resolved'
-  dateSubmitted: Date
-  resolvedDate?: Date
-  resolution?: string
-  priority: 'high' | 'medium' | 'low'
-}
 
 // Admin account
 export const adminAccount = {
@@ -362,25 +347,14 @@ export const mockMatches = [
     developerId: 1,
     status: 'accepted',
     matchedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: 2,
-    developerId: 2,
-    status: 'pending',
-    matchedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: 3,
-    developerId: 3,
-    status: 'accepted',
-    matchedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
   }
 ]
 
+// Updated mock chats
 export const mockChats: Chat[] = [
   {
     id: 'chat1',
-    participants: ['currentUser', 'dev1'],
+    participants: ['currentUser', 'dev1'], // Chat with Alice
     messages: [
       createMockMessage('msg1', 'dev1', 'currentUser', `Hey ${currentUser.firstName}! I saw your profile and I love your React projects!`, new Date(Date.now() - 86400000), true),
       createMockMessage('msg2', 'currentUser', 'dev1', `Thanks ${getDeveloperName('dev1')}! I'm always looking to collaborate on interesting projects.`, new Date(Date.now() - 82800000), true),
@@ -388,27 +362,6 @@ export const mockChats: Chat[] = [
     ],
     unreadCount: 1,
     lastMessage: createMockMessage('msg3', 'dev1', 'currentUser', 'Would you be interested in working on a TypeScript library together?', new Date(Date.now() - 3600000))
-  },
-  {
-    id: 'chat2',
-    participants: ['currentUser', 'dev2'],
-    messages: [
-      createMockMessage('msg4', 'currentUser', 'dev2', `Hi ${getDeveloperName('dev2')}, I see you're working with Vue.js!`, new Date(Date.now() - 172800000), true),
-      createMockMessage('msg5', 'dev2', 'currentUser', "Yes! I'm currently building a new component library.", new Date(Date.now() - 169200000), true)
-    ],
-    unreadCount: 0,
-    lastMessage: createMockMessage('msg5', 'dev2', 'currentUser', "Yes! I'm currently building a new component library.", new Date(Date.now() - 169200000)),
-  },
-  {
-    id: 'chat3',
-    participants: ['currentUser', 'dev3'],
-    messages: [
-      createMockMessage('msg6', 'dev3', 'currentUser', "Hello! Looking for Java developers?", new Date(Date.now() - 7200000), true),
-      createMockMessage('msg7', 'currentUser', 'dev3', `Actually yes ${getDeveloperName('dev3')}! We have an exciting Spring Boot project.`, new Date(Date.now() - 5400000), true),
-      createMockMessage('msg8', 'dev3', 'currentUser', "Perfect! When can we discuss the details?", new Date(Date.now() - 1800000), false)
-    ],
-    unreadCount: 2,
-    lastMessage: createMockMessage('msg8', 'dev3', 'currentUser', 'Perfect! When can we discuss the details?', new Date(Date.now() - 1800000))
   }
 ]
 
@@ -476,5 +429,52 @@ export const mockNotifications: Notification[] = [
     read: true,
     timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     link: '/home'
+  }
+]
+
+// Special developer for testing match functionality
+const davidKimId = "4"; // ID must be a string that matches David's developer ID
+
+// Mock swipes data
+export const mockSwipes: Swipe[] = [
+  {
+    id: uuidv4(),
+    swiperId: davidKimId, // David Kim
+    swipedId: "currentUser", // Nicole Keith
+    isLiked: true,
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+  },
+  // Alice and Nicole have already matched
+  {
+    id: uuidv4(),
+    swiperId: "currentUser", // Nicole
+    swipedId: "1", // Alice
+    isLiked: true,
+    createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: uuidv4(),
+    swiperId: "1", // Alice
+    swipedId: "currentUser", // Nicole
+    isLiked: true,
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  }
+]
+
+// Mock database matches
+export const mockDbMatches: DbMatch[] = [
+  {
+    id: uuidv4(),
+    userAId: "currentUser", // Nicole
+    userBId: "1", // Alice
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    isConnected: true // Alice is already connected
+  },
+  {
+    id: uuidv4(),
+    userAId: "currentUser", // Nicole
+    userBId: "4", // David Kim
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    isConnected: false // David Kim is matched but not connected yet
   }
 ]

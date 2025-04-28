@@ -181,9 +181,9 @@ onUnmounted(() => {
                 Matches
               </button>
               <button
-                @click="activeTab = 'chats'"
+                @click="() => { activeTab = 'chat'; router.push('/home/chat'); }"
                 class="px-4 py-2 rounded-md transition-colors duration-200 font-medium"
-                :class="activeTab === 'chats' ? 'text-primary bg-primary/10' : 'text-text-secondary hover:text-primary hover:bg-gray-50'">
+                :class="activeTab === 'chat' ? 'text-primary bg-primary/10' : 'text-text-secondary hover:text-primary hover:bg-gray-50'">
                 Chats
               </button>
             </div>

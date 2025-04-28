@@ -1,5 +1,5 @@
-import type { ActivityAction, ActivityCategory, ActivityLog } from '@/types/activity';
-import { actionCategoryMap } from '@/types/activity';
+import type { ActivityAction, ActivityCategory, ActivityLog } from '@/interfaces/interfaces'
+import { actionCategoryMap } from '@/interfaces/interfaces';
 import { nanoid } from 'nanoid';
 
 /**

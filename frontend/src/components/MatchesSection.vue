@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useMatchStore } from '@/stores/matchStore'
+import { useSwipeStore } from '@/stores/swipeStore'
 import { useActivityLogger } from '@/composables/useActivityLogger'
+import { useUserStore } from '@/stores/userStore'
+import { useNotificationStore } from '@/stores/notificationStore'
 
 const matchStore = useMatchStore()
+const swipeStore = useSwipeStore()
 const { logMatchAccepted } = useActivityLogger()
 const emit = defineEmits(['update:activeTab'])
 
@@ -12,6 +16,7 @@ const currentPage = ref(1)
 const itemsPerPage = ref(6)
 
 onMounted(async () => {
+  console.log("MatchesSection mounted, fetching matches...")
   await matchStore.fetchMatches()
 })
 
@@ -31,7 +36,69 @@ const paginatedMatches = computed(() => {
 })
 
 const handleConnect = async (matchId: number) => {
-  await matchStore.updateMatchStatus(matchId, 'accepted')
+  console.log(`Connect button clicked for match ID: ${matchId}`);
+
+  // Log all available matches for debugging
+  console.log('All matches:', matchStore.matches);
+
+  const match = matchStore.matches.find(m => m.id === matchId);
+  console.log('Found match object:', match);
+
+  if (match) {
+    console.log(`Connecting with developer: ${match.developer.name} (ID: ${match.developer.id})`);
+
+    // Also record this in swipeStore for data consistency if not already recorded
+    const userStore = useUserStore();
+    if (userStore.user && userStore.user.id) {
+      const swipedId = String(match.developer.id); // Ensure ID is a string
+      console.log(`Adding swipe for connection: ${userStore.user.id} → ${swipedId}`);
+
+      try {
+        await swipeStore.addSwipe({
+          swiperId: userStore.user.id,
+          swipedId: swipedId,
+          isLiked: true
+        });
+        console.log('Swipe added successfully');
+      } catch (error) {
+        console.error('Error adding swipe:', error);
+      }
+    } else {
+      console.error('User not logged in or missing ID');
+    }
+
+    // Update match status in matchStore
+    console.log('Calling updateMatchStatus with ID:', matchId);
+    try {
+      const result = await matchStore.updateMatchStatus(matchId, 'accepted');
+      console.log('updateMatchStatus result:', result);
+
+      // Only show connection notification if we're connecting for the first time
+      // We don't show a New Match notification here since it would be redundant
+      const notificationStore = useNotificationStore();
+
+      // Clear any existing notifications to prioritize this one
+      notificationStore.hideToast();
+      notificationStore.notificationQueue = [];
+
+      notificationStore.success(
+        '🔗 Connection Established!',
+        `You've successfully connected with ${match.developer.name}. You can now start chatting!`,
+        `/chat/${match.developer.id}`,
+        5000 // Standard duration for connection notification
+      );
+
+    } catch (error) {
+      console.error('Error in updateMatchStatus:', error);
+    }
+
+    // Refresh matches
+    console.log('Refreshing matches...');
+    await matchStore.fetchMatches();
+    console.log('Matches refreshed');
+  } else {
+    console.error(`Match with ID ${matchId} not found`);
+  }
 }
 
 const goToPage = (page: number) => {
@@ -141,7 +208,7 @@ const goToNextPage = () => {
                   <span>Pending...</span>
                 </span>
               </div>
-              <button v-if="match.status === 'pending'" @click="handleConnect(match.id)" class="rounded-xl bg-gradient-to-r from-primary to-secondary px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-all duration-300 hover:shadow-md transform hover:scale-105">
+              <button v-if="match.status !== 'accepted'" @click="handleConnect(match.id)" class="rounded-xl bg-gradient-to-r from-primary to-secondary px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-all duration-300 hover:shadow-md transform hover:scale-105">
                 Connect
               </button>
             </div>

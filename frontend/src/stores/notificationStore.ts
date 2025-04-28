@@ -6,12 +6,22 @@ const generateId = () => `notification-${Date.now()}-${Math.floor(Math.random() 
 
 const initialUnreadCount = mockNotifications.filter(notification => !notification.read).length
 
+// Default duration for each notification type
+const DEFAULT_DURATIONS = {
+  info: 3000,
+  success: 4000,
+  warning: 5000,
+  error: 6000
+}
+
 export const useNotificationStore = defineStore('notification', {
   state: (): NotificationState => ({
     notifications: [...mockNotifications],
     unreadCount: initialUnreadCount,
     showToast: false,
-    currentToast: null
+    currentToast: null,
+    notificationQueue: [],
+    processingQueue: false
   }),
 
   getters: {
@@ -21,7 +31,7 @@ export const useNotificationStore = defineStore('notification', {
   },
 
   actions: {
-    addNotification(notification: Partial<Notification>) {
+    addNotification(notification: Partial<Notification>, displayDuration?: number) {
       const newNotification: Notification = {
         id: generateId(),
         title: notification.title || '',
@@ -29,42 +39,90 @@ export const useNotificationStore = defineStore('notification', {
         type: notification.type || 'info',
         read: false,
         timestamp: new Date(),
-        link: '/notifications'
+        link: notification.link || '/notifications'
       }
 
+      // Add to permanent notifications list
       this.notifications.unshift(newNotification)
       this.unreadCount++
 
-      this.currentToast = newNotification
-      this.showToast = true
+      // Add customized display duration as a non-enumerable property
+      Object.defineProperty(newNotification, 'displayDuration', {
+        value: displayDuration || DEFAULT_DURATIONS[newNotification.type] || 5000,
+        enumerable: false
+      })
 
-      // Hide toast after 5 seconds
-      setTimeout(() => {
-        this.showToast = false
-        this.currentToast = null
-      }, 5000)
+      // Add to queue and process if not already processing
+      this.queueNotification(newNotification)
 
       return newNotification.id
     },
 
-    notify(title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info', link?: string) {
-      return this.addNotification({ title, message, type, link: '/notifications' })
+    queueNotification(notification: Notification) {
+      this.notificationQueue.push(notification)
+
+      // Start processing the queue if not already processing
+      if (!this.processingQueue) {
+        this.processNotificationQueue()
+      }
     },
 
-    success(title: string, message: string, link?: string) {
-      return this.notify(title, message, 'success', '/notifications')
+    async processNotificationQueue() {
+      if (this.notificationQueue.length === 0) {
+        this.processingQueue = false
+        return
+      }
+
+      this.processingQueue = true
+
+      // Get the next notification
+      const nextNotification = this.notificationQueue.shift()
+      if (!nextNotification) {
+        this.processingQueue = false
+        return
+      }
+
+      // Show this notification
+      this.currentToast = nextNotification
+      this.showToast = true
+
+      // Wait for the duration
+      const duration = (nextNotification as any).displayDuration || 3000
+
+      // Use Promise and setTimeout for cleaner async handling
+      await new Promise(resolve => setTimeout(resolve, duration))
+
+      // Hide the current toast if it's still the one we displayed
+      if (this.currentToast?.id === nextNotification.id) {
+        this.showToast = false
+        this.currentToast = null
+
+        // Shorter delay before showing the next notification for faster transitions
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+
+      // Process the next notification in the queue
+      this.processNotificationQueue()
     },
 
-    error(title: string, message: string, link?: string) {
-      return this.notify(title, message, 'error', '/notifications')
+    notify(title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info', link?: string, duration?: number) {
+      return this.addNotification({ title, message, type, link }, duration)
     },
 
-    warning(title: string, message: string, link?: string) {
-      return this.notify(title, message, 'warning', '/notifications')
+    success(title: string, message: string, link?: string, duration?: number) {
+      return this.notify(title, message, 'success', link, duration)
     },
 
-    info(title: string, message: string, link?: string) {
-      return this.notify(title, message, 'info', '/notifications')
+    error(title: string, message: string, link?: string, duration?: number) {
+      return this.notify(title, message, 'error', link, duration)
+    },
+
+    warning(title: string, message: string, link?: string, duration?: number) {
+      return this.notify(title, message, 'warning', link, duration)
+    },
+
+    info(title: string, message: string, link?: string, duration?: number) {
+      return this.notify(title, message, 'info', link, duration)
     },
 
     markAsRead(id: string) {

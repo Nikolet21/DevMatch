@@ -52,6 +52,24 @@ export interface Match {
   lastMessageAt?: Date
 }
 
+// Swipe data model for the database
+export interface Swipe {
+  id: string;
+  swiperId: string; // ID of the user who swiped
+  swipedId: string; // ID of the user who was swiped
+  isLiked: boolean;
+  createdAt: Date;
+}
+
+// Match data model for the database
+export interface DbMatch {
+  id: string;
+  userAId: string;
+  userBId: string;
+  createdAt: Date;
+  isConnected?: boolean; // Flag to indicate if users have clicked 'Connect' to enable chat
+}
+
 export interface MatchState {
   potentialMatches: Developer[]
   matches: Match[]
@@ -80,7 +98,6 @@ export interface Profile extends User {
   githubUrl?: string
   linkedinUrl?: string
 }
-
 
 export interface ProfileEditForm {
   firstName: string
@@ -150,4 +167,85 @@ export interface NotificationState {
   unreadCount: number
   showToast: boolean
   currentToast: Notification | null
+  notificationQueue: Notification[] // Queue for pending notifications
+  processingQueue: boolean // Flag to track if we're currently processing the queue
+}
+
+export type ActivityCategory = 'Security' | 'Profile' | 'Matches' | 'Reports' | 'Privacy';
+
+export type ActivityAction =
+  // Security actions
+  | 'Login'
+  | 'Logout'
+  | 'Password Changed'
+  | 'Email Changed'
+  | 'MFA Enabled'
+  | 'MFA Disabled'
+  | 'Login Attempt Failed'
+  | 'Account Deleted'
+  // Profile actions
+  | 'Profile Updated'
+  | 'Profile Picture Updated'
+  // Match actions
+  | 'Match Created'
+  | 'Match Accepted'
+  | 'Match Rejected'
+  // Report actions
+  | 'Report Submitted'
+  // Privacy actions
+  | 'User Muted'
+  | 'User Unmuted'
+  | 'User Blocked'
+  | 'User Unblocked';
+
+export interface ActivityLog {
+  id: string;
+  action: ActivityAction;
+  category: ActivityCategory;
+  description: string;
+  timestamp: Date;
+  metadata?: Record<string, any>; // Optional additional data
+}
+
+// This maps action types to their categories for consistency
+export const actionCategoryMap: Record<ActivityAction, ActivityCategory> = {
+  // Security actions
+  'Login': 'Security',
+  'Logout': 'Security',
+  'Password Changed': 'Security',
+  'Email Changed': 'Security',
+  'MFA Enabled': 'Security',
+  'MFA Disabled': 'Security',
+  'Login Attempt Failed': 'Security',
+  'Account Deleted': 'Security',
+  // Profile actions
+  'Profile Updated': 'Profile',
+  'Profile Picture Updated': 'Profile',
+  // Match actions
+  'Match Created': 'Matches',
+  'Match Accepted': 'Matches',
+  'Match Rejected': 'Matches',
+  // Report actions
+  'Report Submitted': 'Reports',
+  // Privacy actions
+  'User Muted': 'Privacy',
+  'User Unmuted': 'Privacy',
+  'User Blocked': 'Privacy',
+  'User Unblocked': 'Privacy'
+};
+
+// Report interface for user reporting system
+export interface Report {
+  id: number
+  reporterId: string
+  reporterName: string
+  targetId: string
+  targetName: string
+  reason: string
+  description: string
+  status: 'pending' | 'investigating' | 'resolved'
+  dateSubmitted: Date
+  resolvedDate?: Date
+  resolution?: string
+  priority: 'high' | 'medium' | 'low'
 }

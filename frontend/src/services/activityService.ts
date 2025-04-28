@@ -1,13 +1,9 @@
-import type { ActivityLog, ActivityAction } from '@/types/activity';
+import type { ActivityLog, ActivityAction } from '@/interfaces/interfaces'
 import { createActivityLog } from '@/utils/activityUtils';
 
 const STORAGE_KEY = 'devmatch_activity_logs';
-const MAX_LOGS = 100; // Maximum number of logs to store locally
+const MAX_LOGS = 100;
 
-/**
- * Service to manage activity logs in local storage
- * In a real app, this would interact with a backend API
- */
 export const activityService = {
   /**
    * Get all activity logs from local storage

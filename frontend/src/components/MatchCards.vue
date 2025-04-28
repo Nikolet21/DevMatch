@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
-import { useMatchStore } from '../stores/matchStore'
-import { useUserStore } from '../stores/userStore'
+import { onMounted, computed, watch } from 'vue'
+import { useMatchStore } from '@/stores/matchStore'
+import { useUserStore } from '@/stores/userStore'
+import { useSwipeStore } from '@/stores/swipeStore'
 
 const props = defineProps<{
   isSidebarCollapsed: boolean
@@ -9,9 +10,18 @@ const props = defineProps<{
 
 const matchStore = useMatchStore()
 const userStore = useUserStore()
+const swipeStore = useSwipeStore()
 const stackSize = 3 // Number of cards to show in the stack
 
 const hasNoDevelopers = computed(() => matchStore.potentialMatches.length === 0)
+
+// Watch for user changes to fetch matches when user logs in
+watch(() => userStore.user, (newUser) => {
+  if (newUser && newUser.id) {
+    console.log('User loaded, fetching matches for:', newUser.id)
+    matchStore.fetchPotentialMatches()
+  }
+}, { immediate: true })
 
 const visibleCards = computed(() => {
   const cards = []
@@ -43,19 +53,54 @@ const getCardStyle = (index: number) => {
   }
 }
 
-const handleSwipeRight = () => {
+const handleSwipeRight = async () => {
   if (visibleCards.value.length === 0) return
-  matchStore.likeDeveloper(visibleCards.value[0].id)
+
+  const swipedUser = visibleCards.value[0]
+  console.log('Swiping right on developer:', swipedUser)
+
+  // Add swipe to swipe store if user is logged in
+  if (userStore.user && userStore.user.id) {
+    // Record the swipe in the swipe store
+    const swipedId = String(swipedUser.id) // Ensure ID is a string
+    console.log(`Adding swipe: ${userStore.user.id} → ${swipedId} (liked: true)`)
+
+    await swipeStore.addSwipe({
+      swiperId: userStore.user.id,
+      swipedId: swipedId,
+      isLiked: true
+    })
+
+    // Manually force the match detection if this is David Kim (id: 4)
+    if (swipedId === "4") {
+      console.log("Swiped on David Kim! Checking for mutual like...")
+      // Directly fetch matches to update the UI
+      await matchStore.fetchMatches()
+    }
+  }
+
+  // Original match store logic handles UI updates
+  matchStore.likeDeveloper(swipedUser.id)
 }
 
-const handleSwipeLeft = () => {
+const handleSwipeLeft = async () => {
   if (visibleCards.value.length === 0) return
-  matchStore.passDeveloper(visibleCards.value[0].id)
-}
 
-onMounted(() => {
-  matchStore.fetchPotentialMatches()
-})
+  const swipedUser = visibleCards.value[0]
+
+  // Add swipe to swipe store if user is logged in
+  if (userStore.user && userStore.user.id) {
+    // Record the swipe in the swipe store
+    await swipeStore.addSwipe({
+      swiperId: userStore.user.id,
+      swipedId: swipedUser.id.toString(),
+      isLiked: false
+    })
+  }
+
+  // Original match store logic handles UI updates
+  matchStore.passDeveloper(swipedUser.id)
+}
 </script>
 
 <template>
