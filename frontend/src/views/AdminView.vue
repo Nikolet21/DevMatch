@@ -6,11 +6,13 @@ import { useRouter } from 'vue-router'
 const AdminDashboard = defineAsyncComponent(() => import('@/components/admin/AdminDashboard.vue'))
 const AdminUsers = defineAsyncComponent(() => import('@/components/admin/AdminUsers.vue'))
 const AdminReports = defineAsyncComponent(() => import('@/components/admin/AdminReports.vue'))
+const SignOutModal = defineAsyncComponent(() => import('@/components/modals/SignOutModal.vue'))
 
 const router = useRouter()
 const activeSection = ref<AdminSection>('dashboard')
 const isSidebarOpen = ref(true)
 const isMobileMenuOpen = ref(false)
+const showSignOutModal = ref(false)
 
 // Define section type
 type AdminSection = 'dashboard' | 'users' | 'reports';
@@ -50,14 +52,22 @@ const setActiveSection = (section: AdminSection) => {
   isMobileMenuOpen.value = false
 }
 
-const handleLogout = () => {
+const openSignOutModal = () => {
+  showSignOutModal.value = true
+}
+
+const handleSignOutConfirm = () => {
   localStorage.removeItem('adminAuthenticated')
   sessionStorage.removeItem('adminAuthenticated')
   localStorage.removeItem('adminEmail')
   sessionStorage.removeItem('adminEmail')
   localStorage.removeItem('adminName')
   sessionStorage.removeItem('adminName')
-  router.push('/admin-portal')
+  router.push('/')
+}
+
+const handleSignOutCancel = () => {
+  showSignOutModal.value = false
 }
 </script>
 
@@ -131,7 +141,7 @@ const handleLogout = () => {
           </button>
           <div class="border-t border-gray-100 my-2"></div>
           <button
-            @click="handleLogout"
+            @click="openSignOutModal"
             class="w-full flex items-center py-3 px-4 rounded-xl text-red-500 hover:bg-red-50 transition-colors duration-200 my-1"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -164,7 +174,7 @@ const handleLogout = () => {
             Admin Portal
           </div>
           <button
-            @click="handleLogout"
+            @click="openSignOutModal"
             class="px-4 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 border border-red-100 transition-colors duration-200 flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -244,7 +254,7 @@ const handleLogout = () => {
             </div>
           </div>
           <button
-            @click="handleLogout"
+            @click="openSignOutModal"
             class="w-full flex items-center py-3 px-4 rounded-xl text-red-500 border border-red-100 hover:bg-red-50 transition-all duration-200 mt-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -278,6 +288,13 @@ const handleLogout = () => {
         <AdminReports v-if="activeSection === 'reports'" />
       </div>
     </main>
+
+    <!-- SignOut Modal -->
+    <SignOutModal 
+      v-if="showSignOutModal" 
+      @confirm="handleSignOutConfirm"
+      @cancel="handleSignOutCancel"
+    />
   </div>
 </template>
 

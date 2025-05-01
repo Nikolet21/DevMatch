@@ -71,7 +71,7 @@ const handleLogout = () => {
 
 const confirmLogout = () => {
   userStore.logout()
-  router.push('/login')
+  router.push('/')
   showSignOutModal.value = false
 }
 
