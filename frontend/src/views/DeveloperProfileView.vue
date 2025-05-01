@@ -2,6 +2,8 @@
 import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePrivacyStore } from '../stores/privacyStore'
+import { useSwipeStore } from '../stores/swipeStore'
+import { useUserStore } from '../stores/userStore'
 import type { Developer } from '../interfaces/interfaces'
 import { mockDevelopers } from '../data/mockData'
 import PrivacyConfirmationModal from '../components/modals/PrivacyConfirmationModal.vue'
@@ -9,6 +11,8 @@ import PrivacyConfirmationModal from '../components/modals/PrivacyConfirmationMo
 const router = useRouter()
 const route = useRoute()
 const privacyStore = usePrivacyStore()
+const swipeStore = useSwipeStore()
+const userStore = useUserStore()
 
 const developer = ref<Developer | null>(null)
 const isLoading = ref(true)
@@ -57,6 +61,18 @@ const isUserMuted = computed(() => {
 const isUserBlocked = computed(() => {
   if (!developer.value?.id) return false
   return privacyStore.isUserBlocked(developer.value.id.toString())
+})
+
+// Check if the current user is matched with this developer
+const isMatched = computed(() => {
+  if (!userStore.user?.id || !developer.value?.id) return false
+  
+  // Check if there's a match with isConnected=true between the two users
+  const matches = swipeStore.getMatches(userStore.user.id)
+  return matches.some(match => {
+    const otherUserId = match.userAId === userStore.user?.id ? match.userBId : match.userAId
+    return otherUserId === developer.value?.id.toString() && match.isConnected === true
+  })
 })
 
 // Watch for changes in success message to show notification
@@ -254,6 +270,7 @@ const handleAlbumReport = (imageId: string) => {
                     </span>
                   </div>
                   <button
+                    v-if="isMatched"
                     @click="initiateChat"
                     class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
