@@ -82,7 +82,7 @@ const handleAdminLogin = async () => {
                 id="email"
                 v-model="loginForm.email"
                 type="email"
-                placeholder="admin@devmatch.com"
+                placeholder="Enter your email"
                 class="block w-full pl-10 rounded-md border border-gray-300 py-2 text-text-primary shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                 required
               />
