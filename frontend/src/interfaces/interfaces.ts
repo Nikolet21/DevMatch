@@ -92,6 +92,10 @@ export interface User {
   role?: 'admin' | 'user' | 'developer'
   status?: 'Active' | 'Inactive'
   skills?: string[]
+  bio?: string
+  githubUrl?: string
+  linkedinUrl?: string
+  album?: AlbumImage[]
 }
 
 export interface Profile extends User {

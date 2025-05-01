@@ -281,7 +281,12 @@ export const useUserStore = defineStore('user', {
             email: user.email,
             role: index === 0 ? 'admin' as const : 'user' as const,
             status: 'Active' as const,
-            avatar: defaultAvatar
+            avatar: defaultAvatar,
+            skills: [],
+            bio: '',
+            githubUrl: '',
+            linkedinUrl: '',
+            album: []
           })),
           ...mockDevelopers.map((dev, index) => ({
             id: String(mockUsers.length + index + 1),
@@ -290,7 +295,12 @@ export const useUserStore = defineStore('user', {
             email: dev.email,
             role: 'developer' as const,
             status: 'Active' as const,
-            avatar: dev.avatar
+            avatar: dev.avatar,
+            skills: dev.skills,
+            bio: dev.bio,
+            githubUrl: dev.githubUrl,
+            linkedinUrl: dev.linkedinUrl,
+            album: dev.album
           }))
         ]
       } catch (error) {
@@ -302,7 +312,28 @@ export const useUserStore = defineStore('user', {
     },
 
     selectAdminUser(userId: string) {
-      this.selectedAdminUser = this.adminUsers.find(user => user.id === userId) || null
+      const foundUser = this.adminUsers.find(user => user.id === userId) || null;
+      
+      if (foundUser) {
+        // Find matching developer to ensure we get all data
+        const matchingDeveloper = mockDevelopers.find(dev => dev.email === foundUser.email);
+        
+        if (matchingDeveloper && foundUser.role === 'developer') {
+          // Merge developer data for complete information
+          this.selectedAdminUser = {
+            ...foundUser,
+            skills: matchingDeveloper.skills || foundUser.skills || [],
+            bio: matchingDeveloper.bio || foundUser.bio || '',
+            githubUrl: matchingDeveloper.githubUrl || foundUser.githubUrl || '',
+            linkedinUrl: matchingDeveloper.linkedinUrl || foundUser.linkedinUrl || '',
+            album: matchingDeveloper.album || foundUser.album || []
+          };
+        } else {
+          this.selectedAdminUser = foundUser;
+        }
+      } else {
+        this.selectedAdminUser = null;
+      }
     },
 
     updateUserStatus(userId: string, status: 'Active' | 'Inactive') {
@@ -339,7 +370,12 @@ export const useUserStore = defineStore('user', {
     },
 
     setAdminFilter(filterType: 'search' | 'status' | 'role', value: string) {
-      this.adminFilters[filterType] = value
+      if (filterType === 'role' && value === 'user') {
+        // Treat 'user' as 'developer' for consistency
+        this.adminFilters[filterType] = 'developer'
+      } else {
+        this.adminFilters[filterType] = value
+      }
       this.adminPagination.currentPage = 1
     },
 
