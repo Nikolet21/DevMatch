@@ -248,6 +248,9 @@ export interface Report {
   reporterName: string
   targetId: string
   targetName: string
+  type?: 'user' | 'content' // Type of report: user or content
+  contentId?: string        // ID of the content being reported (if type is 'content')
+  contentTitle?: string     // Title of the content being reported (if type is 'content')
   reason: string
   description: string
   status: 'pending' | 'investigating' | 'resolved'

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { useNotificationStore } from './notificationStore'
 import { mockReports } from '@/data/mockData'
 import type { Report } from '@/interfaces/interfaces'
+import { useUserStore } from './userStore'
 
 interface ReportForm {
   type: string
@@ -127,9 +128,6 @@ export const useReportStore = defineStore('report', {
     resolvedReportsCount: (state) => {
       return state.reports.filter(report => report.status === 'resolved').length
     },
-    investigatingReportsCount: (state) => {
-      return state.reports.filter(report => report.status === 'investigating').length
-    }
   },
 
   actions: {
@@ -246,7 +244,7 @@ export const useReportStore = defineStore('report', {
       this.selectedReport = null
     },
 
-    updateReportStatus(reportId: number, newStatus: 'pending' | 'investigating' | 'resolved', resolution: string = '') {
+    updateReportStatus(reportId: number, newStatus: 'pending' | 'resolved', resolution: string = '') {
       const report = this.reports.find(r => r.id === reportId)
       if (report) {
         report.status = newStatus
@@ -257,12 +255,100 @@ export const useReportStore = defineStore('report', {
       }
     },
 
+    approveReport(reportId: number, action: string, resolution: string) {
+      // Find the report
+      const report = this.reports.find(r => r.id === reportId)
+      if (!report) return
+
+      let actionResolution = '';
+      const userStore = useUserStore();
+      const notificationStore = useNotificationStore();
+
+      // Determine action based on report type and action selected
+      if (report.type === 'user') {
+        // Handle user reports
+        switch (action) {
+          case 'warning':
+            actionResolution = 'Warning issued to user: ' + (resolution || 'Inappropriate behavior as reported');
+            // In a real app, send a warning notification to the user
+            break;
+          case 'temporary-ban':
+            actionResolution = 'User temporarily banned for 7 days: ' + (resolution || 'Due to violation of platform guidelines');
+            // Apply temporary ban
+            if (userStore && report.targetId) {
+              const userId = String(report.targetId);
+              const user = userStore.adminUsers.find(u => u.id === userId);
+              if (user) {
+                userStore.updateUserStatus(userId, 'Inactive');
+                // In a real app, set a flag to auto-reactivate after 7 days
+              }
+            }
+            break;
+          case 'permanent-ban':
+            actionResolution = 'User permanently banned: ' + (resolution || 'Severe violation of platform guidelines');
+            // Apply permanent ban
+            if (userStore && report.targetId) {
+              const userId = String(report.targetId);
+              const user = userStore.adminUsers.find(u => u.id === userId);
+              if (user) {
+                userStore.updateUserStatus(userId, 'Inactive');
+              }
+            }
+            break;
+        }
+      } else if (report.type === 'content') {
+        // Handle content reports
+        switch (action) {
+          case 'remove-content':
+            actionResolution = 'Content removed: ' + (resolution || 'Violated platform guidelines');
+            // In a real app, call an API to remove the content
+            // Here we would need to access the user's portfolio and remove the specified content
+            break;
+          case 'flag-content':
+            actionResolution = 'Content flagged as inappropriate: ' + (resolution || 'Content flagged but left visible with warning label');
+            // In a real app, add a flag to the content
+            break;
+          case 'warning-content':
+            actionResolution = 'Warning issued about content: ' + (resolution || 'Content owner notified of potential guidelines violation');
+            // In a real app, send a warning notification to the content owner
+            break;
+        }
+      }
+
+      // Update report status and resolution
+      this.updateReportStatus(reportId, 'resolved', actionResolution);
+
+      // Send notification (in a real app, this would go to relevant users)
+      notificationStore.success(
+        'Report Processed',
+        `Report #${reportId} has been processed successfully.`
+      );
+    },
+
+    denyReport(reportId: number, resolution: string) {
+      // Mark the report as resolved but indicate it was denied/dismissed
+      const fullResolution = resolution || 'Report dismissed. No action taken.';
+      this.updateReportStatus(reportId, 'resolved', fullResolution);
+      
+      // Notify about the denial (in a real app, this might go to the reporter)
+      const notificationStore = useNotificationStore();
+      notificationStore.info(
+        'Report Dismissed',
+        `Report #${reportId} has been dismissed.`
+      );
+    },
+
     setStatusFilter(status: string) {
       this.statusFilter = status
     },
 
     setPriorityFilter(priority: string) {
       this.priorityFilter = priority
+    },
+
+    resetFilters() {
+      this.statusFilter = 'all'
+      this.priorityFilter = 'all'
     },
 
     fetchReports() {
@@ -272,6 +358,14 @@ export const useReportStore = defineStore('report', {
       // Load reports from mock data
       setTimeout(() => {
         this.reports = mockReports
+
+        // Convert any 'investigating' reports to 'pending' to match our new simplified status model
+        this.reports.forEach(report => {
+          if (report.status === 'investigating') {
+            report.status = 'pending'
+          }
+        })
+        
         this.isLoading = false
       }, 500)
     }
