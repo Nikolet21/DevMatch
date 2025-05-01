@@ -89,6 +89,9 @@ export interface User {
   lastName?: string
   email: string
   avatar?: string
+  role?: 'admin' | 'user' | 'developer'
+  status?: 'Active' | 'Inactive'
+  skills?: string[]
 }
 
 export interface Profile extends User {

@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { useNotificationStore } from './notificationStore'
+import { mockReports } from '@/data/mockData'
+import type { Report } from '@/interfaces/interfaces'
 
 interface ReportForm {
   type: string
@@ -101,8 +103,34 @@ export const useReportStore = defineStore('report', {
     categories: [] as ReportCategory[],
     isSubmitting: false,
     error: null as string | null,
-    validationErrors: {} as ValidationErrors
+    validationErrors: {} as ValidationErrors,
+    // Admin reports functionality
+    reports: [] as Report[],
+    selectedReport: null as Report | null,
+    isLoading: false,
+    statusFilter: 'all',
+    priorityFilter: 'all'
   }),
+
+  getters: {
+    // Admin reports functionality
+    filteredReports: (state) => {
+      return state.reports.filter(report => {
+        const matchesStatus = state.statusFilter === 'all' || report.status === state.statusFilter
+        const matchesPriority = state.priorityFilter === 'all' || report.priority === state.priorityFilter
+        return matchesStatus && matchesPriority
+      })
+    },
+    pendingReportsCount: (state) => {
+      return state.reports.filter(report => report.status === 'pending').length
+    },
+    resolvedReportsCount: (state) => {
+      return state.reports.filter(report => report.status === 'resolved').length
+    },
+    investigatingReportsCount: (state) => {
+      return state.reports.filter(report => report.status === 'investigating').length
+    }
+  },
 
   actions: {
     setTargetId(id: string | number) {
@@ -165,7 +193,7 @@ export const useReportStore = defineStore('report', {
         const notificationStore = useNotificationStore()
         const reportType = this.form.type === 'user' ? 'User' : 'Content'
         notificationStore.success(
-          `${reportType} Reported`, 
+          `${reportType} Reported`,
           `Your report has been submitted successfully and will be reviewed by our team.`,
           '/home'
         )
@@ -186,7 +214,7 @@ export const useReportStore = defineStore('report', {
       } catch (e) {
         const notificationStore = useNotificationStore()
         notificationStore.error(
-          'Report Failed', 
+          'Report Failed',
           'Failed to submit report. Please try again later.'
         )
         this.error = 'Failed to submit report. Please try again.'
@@ -207,6 +235,45 @@ export const useReportStore = defineStore('report', {
         default:
           return 'Submit Report'
       }
+    },
+
+    // Admin reports functionality
+    selectReport(report: Report) {
+      this.selectedReport = report
+    },
+
+    clearSelectedReport() {
+      this.selectedReport = null
+    },
+
+    updateReportStatus(reportId: number, newStatus: 'pending' | 'investigating' | 'resolved', resolution: string = '') {
+      const report = this.reports.find(r => r.id === reportId)
+      if (report) {
+        report.status = newStatus
+        if (newStatus === 'resolved') {
+          report.resolvedDate = new Date()
+          report.resolution = resolution
+        }
+      }
+    },
+
+    setStatusFilter(status: string) {
+      this.statusFilter = status
+    },
+
+    setPriorityFilter(priority: string) {
+      this.priorityFilter = priority
+    },
+
+    fetchReports() {
+      // In a real app, this would be an API call
+      this.isLoading = true
+
+      // Load reports from mock data
+      setTimeout(() => {
+        this.reports = mockReports
+        this.isLoading = false
+      }, 500)
     }
   }
 })

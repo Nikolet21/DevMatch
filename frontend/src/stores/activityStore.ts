@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { ActivityLog, ActivityAction, ActivityCategory } from '@/types/activity';
+import type { ActivityLog, ActivityAction, ActivityCategory } from '@/interfaces/interfaces';
 import { activityService } from '@/services/activityService';
 
 interface ActivityStoreState {

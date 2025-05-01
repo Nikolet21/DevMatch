@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useAdminUserStore } from '@/stores/adminUserStore'
-import { useAdminReportStore } from '@/stores/adminReportStore'
+import { useUserStore } from '@/stores/userStore'
+import { useReportStore } from '@/stores/reportStore'
 import { useMatchStore } from '@/stores/matchStore'
 
 // Import chart components
@@ -11,41 +11,40 @@ import ReportStatusChart from './charts/ReportStatusChart.vue'
 import SkillsAnalysisChart from './charts/SkillsAnalysisChart.vue'
 
 // Initialize stores
-const adminUserStore = useAdminUserStore()
-const adminReportStore = useAdminReportStore()
+const userStore = useUserStore()
+const reportStore = useReportStore()
 const matchStore = useMatchStore()
 
 // Load data
 onMounted(async () => {
-  await adminUserStore.initializeUsers()
-  await adminReportStore.fetchReports()
+  await userStore.fetchAllUsers()
+  await reportStore.fetchReports()
   await matchStore.fetchMatches()
 })
 
 const stats = [
-  { id: 1, title: 'Total Users', value: computed(() => adminUserStore.users.length), change: '+12%', icon: 'users' },
-  { id: 2, title: 'Active Developers', value: computed(() => adminUserStore.users.filter(u => u.role === 'developer' && u.status === 'Active').length), change: '+7%', icon: 'code' },
+  { id: 1, title: 'Total Developers', value: computed(() => userStore.adminUsers.length), change: '+12%', icon: 'users' },
+  { id: 2, title: 'Active Developers', value: computed(() => userStore.adminUsers.filter(u => u.role === 'developer' && u.status === 'Active').length), change: '+7%', icon: 'code' },
   { id: 3, title: 'Matched Teams', value: computed(() => matchStore.matches.filter(m => m.status === 'accepted').length), change: '+18%', icon: 'user-check' },
-  { id: 4, title: 'Open Reports', value: computed(() => adminReportStore.pendingReportsCount + adminReportStore.investigatingReportsCount), change: computed(() => adminReportStore.pendingReportsCount > 0 ? '+' + adminReportStore.pendingReportsCount : '0'), icon: 'flag' }
+  { id: 4, title: 'Open Reports', value: computed(() => reportStore.pendingReportsCount + reportStore.investigatingReportsCount), change: computed(() => reportStore.pendingReportsCount > 0 ? '+' + reportStore.pendingReportsCount : '0'), icon: 'flag' }
 ]
 
 // Recent users (top 5)
 const recentUsers = computed(() => {
-  return adminUserStore.users
-    .sort((a, b) => b.joinDate.getTime() - a.joinDate.getTime())
+  return userStore.adminUsers
     .slice(0, 5)
     .map(user => ({
       id: user.id,
-      name: user.name,
+      name: `${user.firstName} ${user.lastName}`,
       email: user.email,
-      date: user.joinDate.toLocaleDateString(),
+      date: new Date().toLocaleDateString(), // Fallback since we don't have joinDate in the User type
       role: user.role
     }))
 })
 
 // Recent activities (using reports and user data)
 const recentActivities = computed(() => {
-  const reportActivities = adminReportStore.reports
+  const reportActivities = reportStore.reports
     .sort((a, b) => new Date(b.dateSubmitted).getTime() - new Date(a.dateSubmitted).getTime())
     .slice(0, 3)
     .map(report => ({
@@ -55,18 +54,16 @@ const recentActivities = computed(() => {
       time: new Date(report.dateSubmitted).toLocaleDateString()
     }))
 
-  const userActivities = adminUserStore.users
-    .sort((a, b) => b.joinDate.getTime() - a.joinDate.getTime())
+  const userActivities = userStore.adminUsers
     .slice(0, 2)
     .map(user => ({
       id: `user-${user.id}`,
-      user: user.name,
+      user: `${user.firstName} ${user.lastName}`,
       action: 'joined the platform',
-      time: user.joinDate.toLocaleDateString()
+      time: new Date().toLocaleDateString()
     }))
 
   return [...reportActivities, ...userActivities]
-    .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
     .slice(0, 5)
 })
 </script>
@@ -117,13 +114,13 @@ const recentActivities = computed(() => {
       <!-- User Role Distribution -->
       <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">User Distribution</h2>
-        <UserRoleDistributionChart :users="adminUserStore.users" />
+        <UserRoleDistributionChart :users="userStore.adminUsers" />
       </div>
 
       <!-- User Growth Timeline -->
       <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">User Growth</h2>
-        <UserGrowthChart :users="adminUserStore.users" />
+        <UserGrowthChart :users="userStore.adminUsers" />
       </div>
     </div>
 
@@ -132,16 +129,16 @@ const recentActivities = computed(() => {
       <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Report Status</h2>
         <ReportStatusChart
-          :pending-count="adminReportStore.pendingReportsCount"
-          :investigating-count="adminReportStore.investigatingReportsCount"
-          :resolved-count="adminReportStore.resolvedReportsCount"
+          :pending-count="reportStore.pendingReportsCount"
+          :investigating-count="reportStore.investigatingReportsCount"
+          :resolved-count="reportStore.resolvedReportsCount"
         />
       </div>
 
       <!-- Top Skills -->
       <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Top Developer Skills</h2>
-        <SkillsAnalysisChart :users="adminUserStore.users" />
+        <SkillsAnalysisChart :users="userStore.adminUsers" />
       </div>
     </div>
 

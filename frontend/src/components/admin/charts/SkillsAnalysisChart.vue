@@ -2,55 +2,53 @@
 import { defineProps, computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js'
-import type { AdminUser } from '@/stores/adminUserStore'
+import type { User } from '@/interfaces/interfaces'
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const props = defineProps({
   users: {
-    type: Array as () => AdminUser[],
+    type: Array as () => User[],
     required: true
   }
 })
 
-// Most common skills among developers
+// Analyze skills distribution
 const chartData = computed(() => {
-  const skillCounts: Record<string, number> = {}
+  // Count all skills
+  const skillsCount: Record<string, number> = {}
 
   props.users.forEach(user => {
-    user.skills.forEach((skill: string) => {
-      skillCounts[skill] = (skillCounts[skill] || 0) + 1
-    })
+    if (user.skills && Array.isArray(user.skills)) {
+      user.skills.forEach((skill: string) => {
+        skillsCount[skill] = (skillsCount[skill] || 0) + 1
+      })
+    }
   })
 
-  // Get top skills
-  const topSkills = Object.entries(skillCounts)
+  // Sort by count, get top skills
+  const topSkills = Object.entries(skillsCount)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
 
   return {
     labels: topSkills.map(([skill]) => skill),
-    datasets: [{
-      label: 'Developers with Skill',
-      backgroundColor: '#9C6ADE',
-      data: topSkills.map(([, count]) => count)
-    }]
+    datasets: [
+      {
+        label: 'Developer Skills',
+        backgroundColor: '#10B981',
+        data: topSkills.map(([, count]) => count)
+      }
+    ]
   }
 })
 
 // Chart.js options
 const chartOptions = {
   responsive: true,
-  plugins: {
-    legend: {
-      display: false
-    },
-    title: {
-      display: true,
-      text: 'Most Popular Skills'
-    }
-  }
+  maintainAspectRatio: false,
+  indexAxis: 'y' as const
 }
 </script>
 

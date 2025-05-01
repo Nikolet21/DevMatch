@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { mockReports, type Report } from '@/data/mockData'
+import { mockReports } from '@/data/mockData'
+import type { Report } from '@/interfaces/interfaces'
 
 export type { Report }
 

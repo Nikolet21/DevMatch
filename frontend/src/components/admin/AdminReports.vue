@@ -1,28 +1,29 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useAdminReportStore, type Report } from '@/stores/adminReportStore'
+import { useReportStore } from '@/stores/reportStore'
+import type { Report } from '@/interfaces/interfaces'
 
 // Use the Pinia store
-const adminReportStore = useAdminReportStore()
+const reportStore = useReportStore()
 
 // Use the modal state locally
 const showReportDetails = ref(false)
 
 // Methods
 const viewReportDetails = (report: Report) => {
-  adminReportStore.selectReport(report)
+  reportStore.selectReport(report)
   showReportDetails.value = true
 }
 
 const closeReportDetails = () => {
   showReportDetails.value = false
   setTimeout(() => {
-    adminReportStore.clearSelectedReport()
+    reportStore.clearSelectedReport()
   }, 200)
 }
 
 const updateReportStatus = (reportId: number, newStatus: 'pending' | 'investigating' | 'resolved', resolution = '') => {
-  adminReportStore.updateReportStatus(reportId, newStatus, resolution)
+  reportStore.updateReportStatus(reportId, newStatus, resolution)
 
   // Close the modal after updating
   if (showReportDetails.value) {
@@ -57,7 +58,7 @@ const getPriorityClass = (priority: string) => {
 }
 
 onMounted(() => {
-  adminReportStore.fetchReports()
+  reportStore.fetchReports()
 })
 </script>
 
@@ -79,7 +80,7 @@ onMounted(() => {
           </div>
           <div>
             <p class="text-sm font-medium text-gray-500">Pending Reports</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ adminReportStore.pendingReportsCount }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ reportStore.pendingReportsCount }}</p>
           </div>
         </div>
       </div>
@@ -93,7 +94,7 @@ onMounted(() => {
           </div>
           <div>
             <p class="text-sm font-medium text-gray-500">Investigating</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ adminReportStore.investigatingReportsCount }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ reportStore.investigatingReportsCount }}</p>
           </div>
         </div>
       </div>
@@ -107,7 +108,7 @@ onMounted(() => {
           </div>
           <div>
             <p class="text-sm font-medium text-gray-500">Resolved Reports</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ adminReportStore.resolvedReportsCount }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ reportStore.resolvedReportsCount }}</p>
           </div>
         </div>
       </div>
@@ -119,7 +120,7 @@ onMounted(() => {
         <div class="text-base font-medium text-gray-900">Filter Reports</div>
         <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
           <select
-            v-model="adminReportStore.statusFilter"
+            v-model="reportStore.statusFilter"
             class="rounded-lg border-gray-300 focus:border-primary focus:ring-primary sm:text-sm"
           >
             <option value="all">All Status</option>
@@ -129,7 +130,7 @@ onMounted(() => {
           </select>
 
           <select
-            v-model="adminReportStore.priorityFilter"
+            v-model="reportStore.priorityFilter"
             class="rounded-lg border-gray-300 focus:border-primary focus:ring-primary sm:text-sm"
           >
             <option value="all">All Priorities</option>
@@ -156,7 +157,7 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="report in adminReportStore.filteredReports" :key="report.id" class="hover:bg-gray-50 transition-colors">
+            <tr v-for="report in reportStore.filteredReports" :key="report.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="ml-4">
@@ -192,7 +193,7 @@ onMounted(() => {
             </tr>
 
             <!-- Empty state when no reports match filters -->
-            <tr v-if="adminReportStore.filteredReports.length === 0">
+            <tr v-if="reportStore.filteredReports.length === 0">
               <td colspan="6" class="px-6 py-8 text-center">
                 <div class="flex flex-col items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -223,18 +224,18 @@ onMounted(() => {
                   Report Details
                 </h3>
 
-                <div v-if="adminReportStore.selectedReport" class="space-y-4">
+                <div v-if="reportStore.selectedReport" class="space-y-4">
                   <div class="bg-gray-50 p-4 rounded-lg">
                     <div class="flex items-center justify-between mb-2">
                       <span class="text-sm font-medium text-gray-500">Status</span>
-                      <span class="px-2 py-1 text-xs rounded-full" :class="getStatusClass(adminReportStore.selectedReport.status)">
-                        {{ adminReportStore.selectedReport.status.charAt(0).toUpperCase() + adminReportStore.selectedReport.status.slice(1) }}
+                      <span class="px-2 py-1 text-xs rounded-full" :class="getStatusClass(reportStore.selectedReport.status)">
+                        {{ reportStore.selectedReport.status.charAt(0).toUpperCase() + reportStore.selectedReport.status.slice(1) }}
                       </span>
                     </div>
                     <div class="flex items-center justify-between">
                       <span class="text-sm font-medium text-gray-500">Priority</span>
-                      <span class="px-2 py-1 text-xs rounded-full" :class="getPriorityClass(adminReportStore.selectedReport.priority)">
-                        {{ adminReportStore.selectedReport.priority.charAt(0).toUpperCase() + adminReportStore.selectedReport.priority.slice(1) }}
+                      <span class="px-2 py-1 text-xs rounded-full" :class="getPriorityClass(reportStore.selectedReport.priority)">
+                        {{ reportStore.selectedReport.priority.charAt(0).toUpperCase() + reportStore.selectedReport.priority.slice(1) }}
                       </span>
                     </div>
                   </div>
@@ -243,33 +244,31 @@ onMounted(() => {
                     <dl class="grid grid-cols-1 gap-x-4 gap-y-4">
                       <div class="sm:col-span-1">
                         <dt class="text-sm font-medium text-gray-500">Reporter</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ adminReportStore.selectedReport.reporterName }}</dd>
+                        <dd class="mt-1 text-sm text-gray-900">{{ reportStore.selectedReport.reporterName }}</dd>
                       </div>
                       <div class="sm:col-span-1">
                         <dt class="text-sm font-medium text-gray-500">Reported User</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ adminReportStore.selectedReport.targetName }}</dd>
+                        <dd class="mt-1 text-sm text-gray-900">{{ reportStore.selectedReport.targetName }}</dd>
                       </div>
                       <div class="sm:col-span-1">
                         <dt class="text-sm font-medium text-gray-500">Reason</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ adminReportStore.selectedReport.reason }}</dd>
+                        <dd class="mt-1 text-sm text-gray-900">{{ reportStore.selectedReport.reason }}</dd>
                       </div>
                       <div class="sm:col-span-1">
                         <dt class="text-sm font-medium text-gray-500">Date Submitted</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ new Date(adminReportStore.selectedReport.dateSubmitted).toLocaleString() }}</dd>
+                        <dd class="mt-1 text-sm text-gray-900">{{ new Date(reportStore.selectedReport.dateSubmitted).toLocaleDateString() }}</dd>
                       </div>
-                      <div v-if="adminReportStore.selectedReport.resolvedDate" class="sm:col-span-1">
+                      <div v-if="reportStore.selectedReport.resolvedDate" class="sm:col-span-1">
                         <dt class="text-sm font-medium text-gray-500">Date Resolved</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ new Date(adminReportStore.selectedReport.resolvedDate).toLocaleString() }}</dd>
-                      </div>
-                      <div v-if="adminReportStore.selectedReport.resolution" class="sm:col-span-1">
-                        <dt class="text-sm font-medium text-gray-500">Resolution</dt>
-                        <dd class="mt-1 text-sm text-gray-900">{{ adminReportStore.selectedReport.resolution }}</dd>
+                        <dd class="mt-1 text-sm text-gray-900">{{ new Date(reportStore.selectedReport.resolvedDate).toLocaleDateString() }}</dd>
                       </div>
                       <div class="sm:col-span-2">
                         <dt class="text-sm font-medium text-gray-500">Description</dt>
-                        <dd class="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
-                          {{ adminReportStore.selectedReport.description }}
-                        </dd>
+                        <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line">{{ reportStore.selectedReport.description }}</dd>
+                      </div>
+                      <div v-if="reportStore.selectedReport.resolution" class="sm:col-span-2">
+                        <dt class="text-sm font-medium text-gray-500">Resolution</dt>
+                        <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line">{{ reportStore.selectedReport.resolution }}</dd>
                       </div>
                     </dl>
                   </div>
@@ -278,32 +277,27 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse space-x-3 space-x-reverse">
+            <button
+              v-if="reportStore.selectedReport && reportStore.selectedReport.status !== 'resolved'"
+              @click="updateReportStatus(reportStore.selectedReport.id, 'resolved', 'Issue resolved after review.')"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Mark as Resolved
+            </button>
+            <button
+              v-if="reportStore.selectedReport && reportStore.selectedReport.status === 'pending'"
+              @click="updateReportStatus(reportStore.selectedReport.id, 'investigating')"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Investigate
+            </button>
             <button
               @click="closeReportDetails"
-              type="button"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-500 text-base font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:ml-3 sm:w-auto sm:text-sm"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm"
             >
               Close
             </button>
-            <div class="mt-3 sm:mt-0 sm:flex-1 flex sm:space-x-2 flex-col sm:flex-row space-y-2 sm:space-y-0">
-              <button
-                v-if="adminReportStore.selectedReport && adminReportStore.selectedReport.status === 'pending'"
-                @click="updateReportStatus(adminReportStore.selectedReport.id, 'investigating')"
-                type="button"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-base font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:text-sm"
-              >
-                Start Investigation
-              </button>
-              <button
-                v-if="adminReportStore.selectedReport && (adminReportStore.selectedReport.status === 'pending' || adminReportStore.selectedReport.status === 'investigating')"
-                @click="updateReportStatus(adminReportStore.selectedReport.id, 'resolved', 'Issue addressed')"
-                type="button"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-500 text-base font-medium text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:w-auto sm:text-sm"
-              >
-                Mark as Resolved
-              </button>
-            </div>
           </div>
         </div>
       </div>
