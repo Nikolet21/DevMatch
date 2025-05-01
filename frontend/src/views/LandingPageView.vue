@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
+
+// Lazy load the SignOutModal component
+const SignOutModal = defineAsyncComponent(() => import('@/components/modals/SignOutModal.vue'))
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -9,6 +12,7 @@ const isHeaderVisible = ref(true)
 const lastScrollPosition = ref(0)
 const animatedElements = ref<HTMLElement[]>([])
 const isMobileMenuOpen = ref(false)
+const showSignOutModal = ref(false)
 
 // Check if user is logged in
 const isAuthenticated = computed(() => userStore.isAuthenticated)
@@ -47,10 +51,26 @@ const navigateToDashboard = () => {
   router.push('/home')
 }
 
-const logout = () => {
+const openSignOutModal = () => {
   closeMobileMenu()
+  showSignOutModal.value = true
+}
+
+const handleSignOutConfirm = () => {
   userStore.logout()
-  router.push('/')
+  showSignOutModal.value = false
+  // Ensure body overflow is reset after modal closes
+  setTimeout(() => {
+    document.body.style.overflow = ''
+  }, 300)
+}
+
+const handleSignOutCancel = () => {
+  showSignOutModal.value = false
+  // Ensure body overflow is reset after modal closes
+  setTimeout(() => {
+    document.body.style.overflow = ''
+  }, 300)
 }
 
 const scrollToFeatures = () => {
@@ -159,7 +179,7 @@ onUnmounted(() => {
                 Dashboard
               </button>
               <button
-                @click="logout"
+                @click="openSignOutModal"
                 class="w-full rounded-xl bg-white py-3 text-center font-semibold text-primary border border-primary/20 shadow-sm hover:bg-gray-50 transition-all duration-200"
               >
                 Sign Out
@@ -202,7 +222,7 @@ onUnmounted(() => {
                   Dashboard
                 </button>
                 <button
-                  @click="logout"
+                  @click="openSignOutModal"
                   class="rounded-full bg-white px-5 py-2 text-sm font-semibold text-primary border border-primary/20 shadow-sm hover:bg-gray-50 transition-all duration-200 hover:shadow-md">
                   Sign Out
                 </button>
@@ -471,6 +491,13 @@ onUnmounted(() => {
         </div>
       </div>
     </footer>
+    
+    <!-- SignOut Modal -->
+    <SignOutModal 
+      v-if="showSignOutModal" 
+      @confirm="handleSignOutConfirm"
+      @cancel="handleSignOutCancel"
+    />
   </div>
 </template>
 

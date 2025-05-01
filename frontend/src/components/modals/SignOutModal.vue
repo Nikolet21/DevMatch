@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, ref, onMounted } from 'vue'
+import { defineEmits, ref, onMounted, onBeforeUnmount } from 'vue'
 
 const emit = defineEmits(['confirm', 'cancel'])
 const isClosing = ref(false)
@@ -7,14 +7,17 @@ const isClosing = ref(false)
 onMounted(() => {
   // Prevent scrolling when modal is open
   document.body.style.overflow = 'hidden'
-  return () => {
-    document.body.style.overflow = ''
-  }
+})
+
+onBeforeUnmount(() => {
+  // Ensure body overflow is reset when component is unmounted
+  document.body.style.overflow = ''
 })
 
 const closeWithAnimation = () => {
   isClosing.value = true
   setTimeout(() => {
+    document.body.style.overflow = ''
     emit('cancel')
   }, 200)
 }
@@ -22,6 +25,7 @@ const closeWithAnimation = () => {
 const confirmWithAnimation = () => {
   isClosing.value = true
   setTimeout(() => {
+    document.body.style.overflow = ''
     emit('confirm')
   }, 200)
 }
@@ -60,7 +64,7 @@ const confirmWithAnimation = () => {
           </svg>
         </div>
         <h3 class="text-xl font-semibold text-text-primary">Sign Out</h3>
-        <p class="text-text-secondary mt-2 mb-6">Are you sure you want to sign out of your admin account?</p>
+        <p class="text-text-secondary mt-2 mb-6">Are you sure you want to sign out of your account?</p>
       </div>
       
       <div class="grid grid-cols-2 gap-4">
