@@ -8,6 +8,7 @@ const userStore = useUserStore()
 const isHeaderVisible = ref(true)
 const lastScrollPosition = ref(0)
 const animatedElements = ref<HTMLElement[]>([])
+const isMobileMenuOpen = ref(false)
 
 // Check if user is logged in
 const isAuthenticated = computed(() => userStore.isAuthenticated)
@@ -21,20 +22,39 @@ const handleScroll = () => {
   checkElementsInViewport()
 }
 
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+  // If opening mobile menu, prevent scrolling
+  if (isMobileMenuOpen.value) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+}
+
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false
+  document.body.style.overflow = ''
+}
+
 const navigateToLogin = () => {
+  closeMobileMenu()
   router.push('/login')
 }
 
 const navigateToDashboard = () => {
+  closeMobileMenu()
   router.push('/home')
 }
 
 const logout = () => {
+  closeMobileMenu()
   userStore.logout()
   router.push('/')
 }
 
 const scrollToFeatures = () => {
+  closeMobileMenu()
   const featuresSection = document.getElementById('features-section')
   if (featuresSection) {
     const headerHeight = 64
@@ -72,11 +92,91 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  // Ensure we reset overflow if component is unmounted with menu open
+  document.body.style.overflow = ''
 })
 </script>
 
 <template>
   <div class="min-h-screen bg-background">
+    <!-- Mobile menu -->
+    <div 
+      class="fixed inset-0 z-60 md:hidden overflow-hidden"
+      :class="isMobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'"
+      aria-modal="true"
+      role="dialog"
+    >
+      <!-- Backdrop -->
+      <div 
+        class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300"
+        :class="isMobileMenuOpen ? 'opacity-100' : 'opacity-0'"
+        @click="closeMobileMenu"
+      ></div>
+      
+      <!-- Menu panel -->
+      <div 
+        class="absolute inset-y-0 right-0 w-3/4 max-w-sm bg-white/95 backdrop-blur-sm shadow-2xl transform transition-transform duration-300 flex flex-col"
+        :class="isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'"
+      >
+        <div class="px-6 pt-8 pb-4 flex items-center justify-between border-b border-gray-200/60">
+          <h2 class="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">DevMatch</h2>
+          <button 
+            @click="closeMobileMenu"
+            class="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors duration-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div class="flex-1 px-6 py-6">
+          <nav class="flex flex-col space-y-5">
+            <a 
+              href="#features-section"
+              @click.prevent="scrollToFeatures"
+              class="text-lg font-medium text-text-primary hover:text-primary transition-colors duration-200"
+            >
+              Features
+            </a>
+            <router-link 
+              to="/about"
+              @click="closeMobileMenu"
+              class="text-lg font-medium text-text-primary hover:text-primary transition-colors duration-200"
+            >
+              About
+            </router-link>
+          </nav>
+        </div>
+        
+        <div class="px-6 py-6 border-t border-gray-200/60">
+          <div class="flex flex-col space-y-4">
+            <template v-if="isAuthenticated">
+              <button
+                @click="navigateToDashboard"
+                class="w-full rounded-xl bg-primary py-3 text-center font-semibold text-white shadow-sm hover:bg-primary/90 transition-all duration-200"
+              >
+                Dashboard
+              </button>
+              <button
+                @click="logout"
+                class="w-full rounded-xl bg-white py-3 text-center font-semibold text-primary border border-primary/20 shadow-sm hover:bg-gray-50 transition-all duration-200"
+              >
+                Sign Out
+              </button>
+            </template>
+            <button
+              v-else
+              @click="navigateToLogin"
+              class="w-full rounded-xl bg-primary py-3 text-center font-semibold text-white shadow-sm hover:bg-primary/90 transition-all duration-200"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Header -->
     <header
       class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-sm"
@@ -117,9 +217,26 @@ onUnmounted(() => {
           </div>
           <!-- Mobile menu button -->
           <div class="flex md:hidden">
-            <button type="button" class="text-text-primary p-2 rounded-md">
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            <button 
+              type="button" 
+              class="text-text-primary p-2 rounded-md hover:bg-primary/10 transition-colors duration-200"
+              @click="toggleMobileMenu"
+              aria-label="Toggle mobile menu"
+              :aria-expanded="isMobileMenuOpen ? 'true' : 'false'"
+            >
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path 
+                  v-if="!isMobileMenuOpen" 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" 
+                />
+                <path 
+                  v-else 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  d="M6 18L18 6M6 6l12 12" 
+                />
               </svg>
             </button>
           </div>
@@ -380,5 +497,10 @@ onUnmounted(() => {
   .animate-on-scroll {
     transform: translateY(20px);
   }
+}
+
+/* Custom z-index for mobile menu */
+.z-60 {
+  z-index: 60;
 }
 </style>
