@@ -19,6 +19,19 @@ export interface ProfileFormErrors {
   general?: string
 }
 
+export interface LoginFormErrors {
+  email?: string
+  password?: string
+}
+
+export interface RegisterFormErrors {
+  firstName?: string
+  lastName?: string
+  email?: string
+  password?: string
+  confirmPassword?: string
+}
+
 export const validateEmail = (email: string): ValidationResult => {
   if (!email) {
     return {
@@ -63,13 +76,84 @@ export const validatePassword = (password: string): ValidationResult => {
   if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
     return {
       isValid: false,
-      error: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      error: 'Password must meet all requirements'
     }
   }
 
   return {
     isValid: true
   }
+}
+
+export const validatePasswordRequirements = (password: string) => {
+  return {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+  }
+}
+
+export const validateLoginForm = (form: {
+  email: string
+  password: string
+}): LoginFormErrors => {
+  const errors: LoginFormErrors = {}
+
+  // Email validation
+  const emailValidation = validateEmail(form.email)
+  if (!emailValidation.isValid) {
+    errors.email = emailValidation.error
+  }
+
+  // Password validation (simple check for login)
+  if (!form.password) {
+    errors.password = 'Password is required'
+  }
+
+  return errors
+}
+
+export const validateRegisterForm = (form: {
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+  confirmPassword: string
+}): RegisterFormErrors => {
+  const errors: RegisterFormErrors = {}
+
+  // First Name validation
+  if (!form.firstName.trim()) {
+    errors.firstName = 'First name is required'
+  }
+
+  // Last Name validation
+  if (!form.lastName.trim()) {
+    errors.lastName = 'Last name is required'
+  }
+
+  // Email validation
+  const emailValidation = validateEmail(form.email)
+  if (!emailValidation.isValid) {
+    errors.email = emailValidation.error
+  }
+
+  // Password validation
+  const passwordValidation = validatePassword(form.password)
+  if (!passwordValidation.isValid) {
+    errors.password = passwordValidation.error
+  }
+
+  // Confirm Password validation
+  if (!form.confirmPassword) {
+    errors.confirmPassword = 'Please confirm your password'
+  } else if (form.password !== form.confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match'
+  }
+
+  return errors
 }
 
 export interface SettingsFormErrors {

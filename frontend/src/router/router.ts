@@ -8,13 +8,21 @@ const router = createRouter({
       path: '/home',
       name: 'home',
       component: () => import('../views/HomeView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: 'chat/:id?',
+          name: 'home-chat',
+          component: () => import('../views/ChatView.vue'),
+          meta: { requiresAuth: true }
+        }
+      ]
     },
     {
       path: '/about',
       name: 'about',
       component: () => import('../views/AboutView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: false }
     },
     {
       path: '/profile',
@@ -26,6 +34,12 @@ const router = createRouter({
       path: '/developer/:id',
       name: 'developer-profile',
       component: () => import('../views/DeveloperProfileView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: () => import('../views/NotificationsView.vue'),
       meta: { requiresAuth: true }
     },
     {
@@ -47,6 +61,25 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/report/:targetId',
+      name: 'report',
+      component: () => import('../views/ReportView.vue'),
+      meta: { requiresAuth: true },
+      props: true
+    },
+    {
+      path: '/admin-portal',
+      name: 'admin-portal',
+      component: () => import('../views/AdminPortalView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../views/AdminView.vue'),
+      meta: { requiresAdminAuth: true }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFoundView.vue'),
@@ -62,6 +95,18 @@ router.beforeEach(async (to, from, next) => {
   // Check for stored authentication
   if (!userStore.isAuthenticated) {
     await userStore.checkAuth()
+  }
+
+  // Check for admin routes
+  if (to.meta.requiresAdminAuth) {
+    const isAdminAuthenticated = localStorage.getItem('adminAuthenticated') === 'true' ||
+                                sessionStorage.getItem('adminAuthenticated') === 'true'
+    if (!isAdminAuthenticated) {
+      next('/admin-login')
+      return
+    }
+    next()
+    return
   }
 
   if (to.meta.requiresAuth && !userStore.isAuthenticated) {

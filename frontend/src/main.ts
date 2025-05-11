@@ -5,12 +5,86 @@ import { createPinia } from 'pinia'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faUser, faRightFromBracket, faBolt, faUsers, faComments, faGear, faBars, faSearch, faArrowRight, faBell } from '@fortawesome/free-solid-svg-icons'
+import {
+  faUser,
+  faRightFromBracket,
+  faBolt,
+  faUsers,
+  faComments,
+  faGear,
+  faBars,
+  faSearch,
+  faArrowRight,
+  faArrowLeft,
+  faBell,
+  faInfoCircle,
+  faCheckCircle,
+  faExclamationTriangle,
+  faTimesCircle,
+  faTimes,
+  faTrashAlt,
+  faCheckDouble,
+  faChevronDown,
+  faThLarge,
+  faUserCheck,
+  faSignOutAlt,
+  faCircleNotch,
+  faDownload,
+  faShieldAlt,
+  faUserEdit,
+  faFlag,
+  faInbox,
+  faChevronLeft,
+  faChevronRight,
+  faEnvelope,
+  faSync,
+  faUserSlash,
+  faKey,
+  faLock,
+  faExclamationCircle
+} from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
 import router from './router/router'
 
-library.add(faUser, faRightFromBracket, faBolt, faUsers, faComments, faGear, faBars, faSearch, faArrowRight, faBell)
+library.add(
+  faUser,
+  faRightFromBracket,
+  faBolt,
+  faUsers,
+  faComments,
+  faGear,
+  faBars,
+  faSearch,
+  faArrowRight,
+  faArrowLeft,
+  faBell,
+  faInfoCircle,
+  faCheckCircle,
+  faExclamationTriangle,
+  faTimesCircle,
+  faTimes,
+  faTrashAlt,
+  faCheckDouble,
+  faChevronDown,
+  faThLarge,
+  faUserCheck,
+  faSignOutAlt,
+  faCircleNotch,
+  faDownload,
+  faShieldAlt,
+  faUserEdit,
+  faFlag,
+  faInbox,
+  faChevronLeft,
+  faChevronRight,
+  faEnvelope,
+  faSync,
+  faUserSlash,
+  faKey,
+  faLock,
+  faExclamationCircle
+)
 
 const app = createApp(App)
 

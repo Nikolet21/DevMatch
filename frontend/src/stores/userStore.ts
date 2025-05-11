@@ -1,21 +1,93 @@
 import { defineStore } from 'pinia'
-import type { UserState, UserRegistrationData } from '../interfaces/interfaces'
+import type { UserState, UserRegistrationData, User } from '../interfaces/interfaces'
 import { mockUsers, mockDevelopers, defaultAvatar } from '../data/mockData'
 import { useProfileStore } from './profileStore'
 
 export const useUserStore = defineStore('user', {
-  state: (): UserState => ({
+  state: (): UserState & {
+    adminUsers: User[];
+    selectedAdminUser: User | null;
+    adminLoading: boolean;
+    adminFilters: {
+      search: string;
+      status: string;
+      role: string;
+    };
+    adminPagination: {
+      currentPage: number;
+      itemsPerPage: number;
+    };
+  } => ({
     user: null,
     isAuthenticated: false,
     token: null,
     loading: false,
-    error: null
+    error: null,
+    // Admin state
+    adminUsers: [],
+    selectedAdminUser: null,
+    adminLoading: false,
+    adminFilters: {
+      search: '',
+      status: 'all',
+      role: 'all'
+    },
+    adminPagination: {
+      currentPage: 1,
+      itemsPerPage: 10
+    }
   }),
 
   getters: {
     currentUser: (state) => state.user,
     isLoading: (state) => state.loading,
-    hasError: (state) => state.error !== null
+    hasError: (state) => state.error !== null,
+    // Admin getters
+    filteredAdminUsers: (state) => {
+      return state.adminUsers.filter(user => {
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase()
+        const matchesSearch = state.adminFilters.search === '' ||
+          fullName.includes(state.adminFilters.search.toLowerCase()) ||
+          user.email.toLowerCase().includes(state.adminFilters.search.toLowerCase())
+
+        const matchesStatus = state.adminFilters.status === 'all' || user.status === state.adminFilters.status
+        const matchesRole = state.adminFilters.role === 'all' || user.role === state.adminFilters.role
+
+        return matchesSearch && matchesStatus && matchesRole
+      })
+    },
+    paginatedAdminUsers: (state) => {
+      const filtered = state.adminUsers.filter(user => {
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase()
+        const matchesSearch = state.adminFilters.search === '' ||
+          fullName.includes(state.adminFilters.search.toLowerCase()) ||
+          user.email.toLowerCase().includes(state.adminFilters.search.toLowerCase())
+
+        const matchesStatus = state.adminFilters.status === 'all' || user.status === state.adminFilters.status
+        const matchesRole = state.adminFilters.role === 'all' || user.role === state.adminFilters.role
+
+        return matchesSearch && matchesStatus && matchesRole
+      })
+
+      const startIndex = (state.adminPagination.currentPage - 1) * state.adminPagination.itemsPerPage
+      const endIndex = startIndex + state.adminPagination.itemsPerPage
+      return filtered.slice(startIndex, endIndex)
+    },
+    totalAdminPages: (state) => {
+      const filtered = state.adminUsers.filter(user => {
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase()
+        const matchesSearch = state.adminFilters.search === '' ||
+          fullName.includes(state.adminFilters.search.toLowerCase()) ||
+          user.email.toLowerCase().includes(state.adminFilters.search.toLowerCase())
+
+        const matchesStatus = state.adminFilters.status === 'all' || user.status === state.adminFilters.status
+        const matchesRole = state.adminFilters.role === 'all' || user.role === state.adminFilters.role
+
+        return matchesSearch && matchesStatus && matchesRole
+      })
+
+      return Math.ceil(filtered.length / state.adminPagination.itemsPerPage) || 1
+    }
   },
 
   actions: {
@@ -54,6 +126,7 @@ export const useUserStore = defineStore('user', {
         const mockDeveloper = mockDevelopers.find(dev => dev.email === email)
 
         this.user = {
+          id: 'currentUser',
           firstName: mockUser.firstName,
           lastName: mockUser.lastName,
           email: mockUser.email,
@@ -63,6 +136,7 @@ export const useUserStore = defineStore('user', {
         // Initialize profile with developer data if available
         const profileStore = useProfileStore()
         profileStore.setProfile({
+          id: 'currentUser',
           firstName: mockUser.firstName,
           lastName: mockUser.lastName,
           email: mockUser.email,
@@ -96,6 +170,8 @@ export const useUserStore = defineStore('user', {
             }
           }))
         }
+
+        console.log("User logged in with ID:", this.user.id)
       } catch (error) {
         this.error = 'Invalid email or password'
         throw error
@@ -112,6 +188,7 @@ export const useUserStore = defineStore('user', {
         await new Promise(resolve => setTimeout(resolve, 1000))
         const mockDeveloper = mockDevelopers.find(dev => dev.email === userData.email)
         this.user = {
+          id: 'currentUser',
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
@@ -121,6 +198,8 @@ export const useUserStore = defineStore('user', {
         this.token = 'dummy-token'
         sessionStorage.setItem('token', this.token)
         sessionStorage.setItem('user', JSON.stringify(this.user))
+
+        console.log("User registered with ID:", this.user.id)
       } catch (error) {
         this.error = 'Registration failed. Please try again.'
         throw error
@@ -152,6 +231,7 @@ export const useUserStore = defineStore('user', {
         this.token = token
         const mockDeveloper = mockDevelopers.find(dev => dev.email === userData.email)
         this.user = {
+          id: 'currentUser',
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
@@ -162,6 +242,7 @@ export const useUserStore = defineStore('user', {
         // Initialize profile store with stored profile data
         const profileStore = useProfileStore()
         profileStore.setProfile({
+          id: 'currentUser',
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
@@ -184,6 +265,122 @@ export const useUserStore = defineStore('user', {
         return true
       }
       return false
+    },
+
+    // Admin actions
+    async fetchAllUsers() {
+      this.adminLoading = true
+      try {
+        // In a real application, this would be an API call
+        // For now, we'll use mock data
+        this.adminUsers = [
+          ...mockUsers.map((user, index) => ({
+            id: String(index + 1),
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: index === 0 ? 'admin' as const : 'user' as const,
+            status: 'Active' as const,
+            avatar: defaultAvatar,
+            skills: [],
+            bio: '',
+            githubUrl: '',
+            linkedinUrl: '',
+            album: []
+          })),
+          ...mockDevelopers.map((dev, index) => ({
+            id: String(mockUsers.length + index + 1),
+            firstName: dev.name.split(' ')[0],
+            lastName: dev.name.split(' ')[1] || '',
+            email: dev.email,
+            role: 'developer' as const,
+            status: 'Active' as const,
+            avatar: dev.avatar,
+            skills: dev.skills,
+            bio: dev.bio,
+            githubUrl: dev.githubUrl,
+            linkedinUrl: dev.linkedinUrl,
+            album: dev.album
+          }))
+        ]
+      } catch (error) {
+        console.error('Failed to fetch users:', error)
+        this.error = 'Failed to load users'
+      } finally {
+        this.adminLoading = false
+      }
+    },
+
+    selectAdminUser(userId: string) {
+      const foundUser = this.adminUsers.find(user => user.id === userId) || null;
+      
+      if (foundUser) {
+        // Find matching developer to ensure we get all data
+        const matchingDeveloper = mockDevelopers.find(dev => dev.email === foundUser.email);
+        
+        if (matchingDeveloper && foundUser.role === 'developer') {
+          // Merge developer data for complete information
+          this.selectedAdminUser = {
+            ...foundUser,
+            skills: matchingDeveloper.skills || foundUser.skills || [],
+            bio: matchingDeveloper.bio || foundUser.bio || '',
+            githubUrl: matchingDeveloper.githubUrl || foundUser.githubUrl || '',
+            linkedinUrl: matchingDeveloper.linkedinUrl || foundUser.linkedinUrl || '',
+            album: matchingDeveloper.album || foundUser.album || []
+          };
+        } else {
+          this.selectedAdminUser = foundUser;
+        }
+      } else {
+        this.selectedAdminUser = null;
+      }
+    },
+
+    updateUserStatus(userId: string, status: 'Active' | 'Inactive') {
+      const user = this.adminUsers.find(u => u.id === userId)
+      if (user) {
+        user.status = status
+      }
+    },
+
+    updateUserRole(userId: string, role: 'admin' | 'user' | 'developer') {
+      const user = this.adminUsers.find(u => u.id === userId)
+      if (user) {
+        user.role = role
+      }
+    },
+
+    editUser(userId: string, userData: Partial<User>) {
+      const userIndex = this.adminUsers.findIndex(u => u.id === userId)
+      if (userIndex !== -1) {
+        this.adminUsers[userIndex] = {
+          ...this.adminUsers[userIndex],
+          ...userData
+        }
+      }
+    },
+
+    resetAdminFilters() {
+      this.adminFilters = {
+        search: '',
+        status: 'all',
+        role: 'all'
+      }
+      this.adminPagination.currentPage = 1
+    },
+
+    setAdminFilter(filterType: 'search' | 'status' | 'role', value: string) {
+      if (filterType === 'role' && value === 'user') {
+        // Treat 'user' as 'developer' for consistency
+        this.adminFilters[filterType] = 'developer'
+      } else {
+        this.adminFilters[filterType] = value
+      }
+      this.adminPagination.currentPage = 1
+    },
+
+    setAdminPage(page: number) {
+      this.adminPagination.currentPage = page
     }
   }
 })

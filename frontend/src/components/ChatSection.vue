@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { useChatStore } from '../stores/chatStore'
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const emit = defineEmits<{
   (e: 'update:activeTab', value: string): void
@@ -39,6 +42,7 @@ function formatTimestamp(date: Date): string {
 
 function selectChat(chatId: string) {
   chatStore.selectChat(chatId)
+  router.push(`/home/chat/${chatId}`)
 }
 </script>
 

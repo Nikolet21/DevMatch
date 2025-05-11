@@ -1,66 +1,147 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const isVisible = ref(false)
+const isHeaderVisible = ref(true)
+const lastScrollPosition = ref(0)
+const animatedElements = ref<HTMLElement[]>([])
 
-onMounted(() => {
-  isVisible.value = true
-})
+const handleScroll = () => {
+  const currentScrollPosition = window.scrollY
+  isHeaderVisible.value = currentScrollPosition < lastScrollPosition.value || currentScrollPosition < 50
+  lastScrollPosition.value = currentScrollPosition
+  
+  // Check for elements in viewport to animate
+  checkElementsInViewport()
+}
 
 const navigateToLanding = () => {
   router.push('/')
 }
+
+// Custom intersection observer implementation
+const checkElementsInViewport = () => {
+  animatedElements.value.forEach(element => {
+    const rect = element.getBoundingClientRect()
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight
+    
+    // Check if element is in viewport
+    if (rect.top <= windowHeight * 0.8 && rect.bottom >= 0) {
+      element.classList.add('visible')
+    }
+  })
+}
+
+// Initialize animations and scroll handler
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+  
+  // Collect all elements with animate-on-scroll class
+  animatedElements.value = Array.from(document.querySelectorAll('.animate-on-scroll'))
+  
+  // Initial check for elements in viewport
+  setTimeout(() => {
+    checkElementsInViewport()
+  }, 100)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
   <div class="min-h-screen bg-background">
-    <!-- Return Button -->
-    <div class="fixed top-4 left-4 z-50">
-      <button
-        @click="navigateToLanding"
-        class="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors duration-200"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        <span>Back to Home</span>
-      </button>
-    </div>
-    <!-- Hero Section -->
-    <section class="relative overflow-hidden py-20 sm:py-32">
-      <div class="absolute inset-x-0 top-1/2 -z-10 -translate-y-1/2 transform-gpu overflow-hidden opacity-30 blur-3xl">
-        <div class="ml-[max(50%,38rem)] aspect-[1313/771] w-[82.0625rem] bg-gradient-to-tr from-primary to-secondary"></div>
+    <!-- Header -->
+    <header
+      class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-sm"
+      :class="{ 'translate-y-0 shadow-md': isHeaderVisible, '-translate-y-full': !isHeaderVisible }"
+      :style="{ backgroundColor: 'rgba(249, 250, 251, ' + (lastScrollPosition > 50 ? '0.85' : '0.5') + ')' }">
+      <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 items-center justify-between">
+          <div class="flex items-center">
+            <router-link to="/" class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">DevMatch</router-link>
+          </div>
+          <div class="hidden md:block">
+            <div class="flex items-center space-x-8">
+              <button
+                @click="navigateToLanding"
+                class="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-all duration-200 hover:shadow-md">
+                Back to Home
+              </button>
+            </div>
+          </div>
+          <!-- Mobile menu button -->
+          <div class="flex md:hidden">
+            <button
+              @click="navigateToLanding"
+              class="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-all duration-200">
+              <span class="sr-only">Back to Home</span>
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl text-center">
-          <h1 class="text-4xl font-bold tracking-tight text-text-primary sm:text-6xl fade-in" :class="{ 'show': isVisible }">
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden pt-32 pb-16 md:pt-40 md:pb-24">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-background z-0"></div>
+      <div class="container mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 relative z-10">
+        <div class="text-center max-w-3xl mx-auto">
+          <h1 class="animate-on-scroll opacity-0 translate-y-8 text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             About DevMatch
           </h1>
-          <p class="mt-6 text-lg text-text-secondary fade-in" :class="{ 'show': isVisible }">
+          <p class="animate-on-scroll opacity-0 translate-y-8 mt-6 text-lg md:text-xl text-text-secondary leading-relaxed">
             Revolutionizing how developers connect, collaborate, and create together.
           </p>
         </div>
       </div>
+      
+      <!-- Decorative elements -->
+      <div class="absolute top-1/4 right-0 w-72 h-72 bg-primary/10 rounded-full filter blur-3xl"></div>
+      <div class="absolute bottom-1/4 left-0 w-80 h-80 bg-secondary/10 rounded-full filter blur-3xl"></div>
     </section>
 
     <!-- Mission Section -->
-    <section class="py-16 sm:py-24">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-8">
-          <div class="fade-in" :class="{ 'show': isVisible }">
-            <h2 class="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">Our Mission</h2>
-            <p class="mt-4 text-lg text-text-secondary">
+    <section class="relative py-16 md:py-24">
+      <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 gap-8 md:gap-12 lg:grid-cols-2">
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-lg border border-primary/10 animate-on-scroll opacity-0 translate-y-8">
+            <div class="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-6">
+              <svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+              </svg>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-bold text-text-primary mb-4">Our Mission</h2>
+            <p class="text-text-secondary leading-relaxed">
               At DevMatch, we believe in the power of collaboration. Our mission is to break down barriers in the developer
               community by creating meaningful connections between talented individuals who share common interests and goals.
             </p>
+            <p class="text-text-secondary leading-relaxed mt-4">
+              We're committed to fostering an inclusive environment where developers of all skill levels can find their
+              perfect match for projects, mentorship, or learning opportunities.
+            </p>
           </div>
-          <div class="fade-in" :class="{ 'show': isVisible }">
-            <h2 class="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">Our Vision</h2>
-            <p class="mt-4 text-lg text-text-secondary">
+          
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-lg border border-secondary/10 animate-on-scroll opacity-0 translate-y-8">
+            <div class="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-secondary/20 to-secondary/10 flex items-center justify-center mb-6">
+              <svg class="h-8 w-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-bold text-text-primary mb-4">Our Vision</h2>
+            <p class="text-text-secondary leading-relaxed">
               We envision a world where every developer can easily find their perfect coding partner, mentor, or team member.
               Through our platform, we're making this vision a reality, one match at a time.
+            </p>
+            <p class="text-text-secondary leading-relaxed mt-4">
+              By leveraging intelligent matching algorithms and creating a supportive community, we aim to become the
+              go-to platform for developers seeking meaningful collaboration opportunities.
             </p>
           </div>
         </div>
@@ -68,75 +149,88 @@ const navigateToLanding = () => {
     </section>
 
     <!-- Values Section -->
-    <section class="py-16 sm:py-24 bg-card">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl text-center">
-          <h2 class="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl fade-in" :class="{ 'show': isVisible }">
+    <section class="relative py-16 md:py-24">
+      <div class="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-background"></div>
+      <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center max-w-3xl mx-auto mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-text-primary bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent animate-on-scroll opacity-0 translate-y-8">
             Our Core Values
           </h2>
+          <p class="mt-4 text-lg text-text-secondary animate-on-scroll opacity-0 translate-y-8">
+            The principles that guide everything we do at DevMatch
+          </p>
         </div>
-        <div class="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           <!-- Value 1 -->
-          <div class="relative rounded-2xl bg-background p-6 shadow-sm gradient-border animate-on-scroll hover-scale">
-            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-primary/10 hover:shadow-xl transition-all duration-300 animate-on-scroll opacity-0 translate-y-8">
+            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-6">
+              <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
               </svg>
             </div>
-            <h3 class="mt-4 text-lg font-semibold text-text-primary">Community First</h3>
-            <p class="mt-2 text-text-secondary">We prioritize building a supportive and inclusive community where developers can thrive together.</p>
+            <h3 class="text-xl font-bold text-text-primary">Community First</h3>
+            <p class="mt-3 text-text-secondary">We prioritize building a supportive and inclusive community where developers can thrive together, share knowledge, and grow professionally.</p>
           </div>
+          
           <!-- Value 2 -->
-          <div class="relative rounded-2xl bg-background p-6 shadow-sm gradient-border animate-on-scroll hover-scale">
-            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary/10">
-              <svg class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-secondary/10 hover:shadow-xl transition-all duration-300 animate-on-scroll opacity-0 translate-y-8">
+            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/10 flex items-center justify-center mb-6">
+              <svg class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
               </svg>
             </div>
-            <h3 class="mt-4 text-lg font-semibold text-text-primary">Innovation</h3>
-            <p class="mt-2 text-text-secondary">We continuously innovate our matching algorithms and platform features to create the best possible experience.</p>
+            <h3 class="text-xl font-bold text-text-primary">Innovation</h3>
+            <p class="mt-3 text-text-secondary">We continuously innovate our matching algorithms and platform features to create the best possible experience for developers seeking their perfect match.</p>
           </div>
+          
           <!-- Value 3 -->
-          <div class="relative rounded-2xl bg-background p-6 shadow-sm gradient-border animate-on-scroll hover-scale">
-            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
-              <svg class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-success/10 hover:shadow-xl transition-all duration-300 animate-on-scroll opacity-0 translate-y-8">
+            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-success/20 to-success/10 flex items-center justify-center mb-6">
+              <svg class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
               </svg>
             </div>
-            <h3 class="mt-4 text-lg font-semibold text-text-primary">Trust & Security</h3>
-            <p class="mt-2 text-text-secondary">We maintain the highest standards of trust and security in all our platform interactions.</p>
+            <h3 class="text-xl font-bold text-text-primary">Trust & Security</h3>
+            <p class="mt-3 text-text-secondary">We maintain the highest standards of trust and security in all our platform interactions, ensuring a safe environment for developers to connect.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Join Us Section -->
-    <section class="relative isolate mt-16 px-6 py-20 sm:mt-32 sm:px-8 md:py-32">
-      <div class="absolute inset-x-0 top-1/2 -z-10 -translate-y-1/2 transform-gpu overflow-hidden opacity-30 blur-3xl">
-        <div class="ml-[max(50%,38rem)] aspect-[1313/771] w-[82.0625rem] bg-gradient-to-tr from-primary to-secondary"></div>
-      </div>
-      <div class="mx-auto max-w-2xl text-center fade-in" :class="{ 'show': isVisible }">
-        <h2 class="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">Join Our Community</h2>
-        <p class="mx-auto mt-6 max-w-xl text-lg text-text-secondary">
-          Be part of a growing community of developers who are reshaping the future of collaborative coding.
-        </p>
-        <div class="mt-10 flex justify-center gap-x-6">
-          <button
-            class="rounded-lg bg-primary px-8 py-4 text-base font-semibold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20">
-            Get Started Today
-          </button>
+    <!-- CTA Section -->
+    <section class="relative py-16 md:py-24 overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5"></div>
+      <div class="container mx-auto max-w-5xl px-6 sm:px-8 relative z-10">
+        <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-6 md:p-8 lg:p-12 shadow-xl border border-primary/10">
+          <div class="mx-auto max-w-3xl text-center">
+            <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-text-primary sm:text-4xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent animate-on-scroll opacity-0 translate-y-8">Join Our Community</h2>
+            <p class="mx-auto mt-4 md:mt-6 max-w-xl text-base md:text-lg text-text-secondary animate-on-scroll opacity-0 translate-y-8">
+              Be part of a growing community of developers who are reshaping the future of collaborative coding.
+            </p>
+            <div class="mt-8 md:mt-10 flex justify-center">
+              <button
+                @click="navigateToLanding"
+                class="rounded-full bg-primary px-6 md:px-8 py-3 md:py-4 text-base font-semibold text-white shadow-md hover:shadow-xl hover:bg-primary/90 transition-all duration-300 transform hover:-translate-y-1 animate-on-scroll opacity-0 translate-y-8">
+                Get Started Today
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+      
+      <!-- Decorative elements -->
+      <div class="absolute top-1/3 left-0 w-64 h-64 bg-primary/10 rounded-full filter blur-3xl"></div>
+      <div class="absolute bottom-1/3 right-0 w-72 h-72 bg-secondary/10 rounded-full filter blur-3xl"></div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-background pt-16 pb-12 relative overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-primary/10"></div>
-      <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+    <footer class="bg-gradient-to-b from-background to-primary/5 pt-12 md:pt-16 pb-6 md:pb-8">
+      <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8 pb-8 md:pb-12">
           <!-- Company Info -->
-          <div class="space-y-4">
-            <h3 class="text-xl font-bold text-text-primary">DevMatch</h3>
+          <div class="col-span-2 md:col-span-1 space-y-3 md:space-y-4">
+            <h3 class="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">DevMatch</h3>
             <p class="text-text-secondary">Connecting developers worldwide through intelligent matching and collaboration.</p>
             <div class="flex space-x-4">
               <a href="#" class="text-text-secondary hover:text-primary transition-colors duration-200">
@@ -159,10 +253,11 @@ const navigateToLanding = () => {
               </a>
             </div>
           </div>
+          
           <!-- Resources -->
-          <div class="space-y-4">
+          <div class="space-y-2 md:space-y-3">
             <h3 class="text-lg font-semibold text-text-primary">Resources</h3>
-            <ul class="space-y-3">
+            <ul class="space-y-2 md:space-y-3">
               <li>
                 <a href="#" class="text-text-secondary hover:text-primary transition-colors duration-200">Documentation</a>
               </li>
@@ -177,10 +272,11 @@ const navigateToLanding = () => {
               </li>
             </ul>
           </div>
+          
           <!-- Company -->
-          <div class="space-y-4">
+          <div class="space-y-2 md:space-y-3">
             <h3 class="text-lg font-semibold text-text-primary">Company</h3>
-            <ul class="space-y-3">
+            <ul class="space-y-2 md:space-y-3">
               <li>
                 <router-link to="/about" class="text-text-secondary hover:text-primary transition-colors duration-200">About Us</router-link>
               </li>
@@ -195,10 +291,11 @@ const navigateToLanding = () => {
               </li>
             </ul>
           </div>
+          
           <!-- Legal -->
-          <div class="space-y-4">
+          <div class="space-y-2 md:space-y-3">
             <h3 class="text-lg font-semibold text-text-primary">Legal</h3>
-            <ul class="space-y-3">
+            <ul class="space-y-2 md:space-y-3">
               <li>
                 <a href="#" class="text-text-secondary hover:text-primary transition-colors duration-200">Privacy Policy</a>
               </li>
@@ -211,7 +308,8 @@ const navigateToLanding = () => {
             </ul>
           </div>
         </div>
-        <div class="mt-12 border-t border-gray-200/10 pt-8">
+        
+        <div class="border-t border-primary/10 pt-8">
           <p class="text-center text-sm text-text-secondary">&copy; 2025 DevMatch. All rights reserved.</p>
         </div>
       </div>
@@ -220,14 +318,27 @@ const navigateToLanding = () => {
 </template>
 
 <style scoped>
-.fade-in {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+/* Animation classes */
+.animate-on-scroll {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
 }
 
-.fade-in.show {
-  opacity: 1;
-  transform: translateY(0);
+.visible {
+  opacity: 1 !important;
+  transform: translate(0, 0) !important;
+}
+
+@media (max-width: 768px) {
+  .animate-on-scroll {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .animate-on-scroll {
+    transform: translateY(20px);
+  }
 }
 </style>
