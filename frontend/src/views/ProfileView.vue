@@ -4,6 +4,38 @@ import { useUserStore } from '../stores/userStore'
 import { useProfileStore } from '../stores/profileStore'
 import { useActivityLogger } from '@/composables/useActivityLogger'
 import { useRouter } from 'vue-router'
+import AddPhotoModal from '../components/modals/AddPhotoModal.vue'
+
+// Predefined developer skills
+const developerSkills = [
+  // Frontend
+  'HTML5', 'CSS3', 'JavaScript', 'TypeScript', 'React', 'Vue.js', 'Angular', 'Svelte',
+  'Next.js', 'Nuxt.js', 'Tailwind CSS', 'Bootstrap', 'Sass/SCSS', 'Webpack', 'Vite',
+  'Redux', 'Vuex', 'GraphQL', 'Apollo Client',
+  
+  // Backend
+  'Node.js', 'Express.js', 'Django', 'Flask', 'Ruby on Rails', 'Spring Boot',
+  'ASP.NET', 'Laravel', 'PHP', 'Python', 'Java', 'C#', 'Go', 'Rust',
+  
+  // Database
+  'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Firebase', 'Supabase',
+  'SQLite', 'Oracle', 'Microsoft SQL Server',
+  
+  // Mobile
+  'React Native', 'Flutter', 'Swift', 'Kotlin', 'Android Development',
+  'iOS Development', 'Xamarin',
+  
+  // DevOps & Tools
+  'Docker', 'Kubernetes', 'AWS', 'Azure', 'Google Cloud', 'CI/CD',
+  'Git', 'Jenkins', 'Terraform', 'Ansible',
+  
+  // Testing
+  'Jest', 'Mocha', 'Cypress', 'Selenium', 'JUnit', 'Pytest',
+  
+  // Others
+  'WebSocket', 'RESTful APIs', 'Microservices', 'Serverless', 'Blockchain',
+  'Machine Learning', 'Data Science', 'UI/UX Design'
+]
 
 const router = useRouter()
 const EditProfileModal = defineAsyncComponent(() => import('../components/modals/EditProfileModal.vue'))
@@ -21,22 +53,76 @@ const showEditModal = ref(false)
 const selectedImage = ref<{ id: string; url: string; caption: string } | null>(null)
 const imageToDelete = ref<string | null>(null)
 const animatedElements = ref<HTMLElement[]>([])
+const imageError = ref('')
+const showImageErrorModal = ref(false)
+const showAddPhotoModal = ref(false)
+const newPhotoData = ref<{ url: string, file: File } | null>(null)
+const newPhotoCaption = ref('')
+
+// Function to generate a simple hash from image data
+const generateImageHash = (imageData: string): string => {
+  const sampleSize = 1000;
+  const step = Math.floor(imageData.length / sampleSize);
+  let sample = '';
+  for (let i = 0; i < imageData.length; i += step) {
+    sample += imageData.charAt(i);
+  }
+  return sample;
+};
+
+// Check if an image is a duplicate
+const isImageDuplicate = (imageUrl: string): boolean => {
+  const newImageHash = generateImageHash(imageUrl);
+  // Check if any existing image has the same hash
+  return profileStore.userAlbum.some(image => {
+    const existingHash = generateImageHash(image.url);
+    return existingHash === newImageHash;
+  });
+};
 
 const handleImageUpload = async (event: Event) => {
+  imageError.value = ''
+  showImageErrorModal.value = false
   const input = event.target as HTMLInputElement
   if (input.files && input.files[0]) {
-    if (profileStore.userAlbum.length >= 4) {
-      alert('Maximum 4 images allowed in the album')
+    const file = input.files[0]
+    
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      imageError.value = 'File size should not exceed 5MB'
+      showImageErrorModal.value = true
       return
     }
-    const file = input.files[0]
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png']
+    if (!allowedTypes.includes(file.type)) {
+      imageError.value = 'Only PNG and JPEG images are allowed'
+      showImageErrorModal.value = true
+      return
+    }
+    
+    if (profileStore.userAlbum.length >= 4) {
+      imageError.value = 'Maximum 4 images allowed in the album'
+      showImageErrorModal.value = true
+      return
+    }
+
     const reader = new FileReader()
 
     reader.onload = (e) => {
       if (e.target?.result) {
-        profileStore.addImage(e.target.result as string, imageCaption.value)
-        logProfilePictureUpdated()
-        imageCaption.value = ''
+        const imageData = e.target.result as string
+        
+        // Check for duplicate image
+        if (isImageDuplicate(imageData)) {
+          imageError.value = 'This image has already been uploaded'
+          showImageErrorModal.value = true
+          return
+        }
+        
+        newPhotoData.value = { url: imageData, file }
+        showAddPhotoModal.value = true
       }
     }
 
@@ -45,9 +131,27 @@ const handleImageUpload = async (event: Event) => {
 }
 
 const handleAvatarUpload = async (event: Event) => {
+  imageError.value = ''
+  showImageErrorModal.value = false
   const input = event.target as HTMLInputElement
   if (input.files && input.files[0]) {
     const file = input.files[0]
+    
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      imageError.value = 'File size should not exceed 5MB'
+      showImageErrorModal.value = true
+      return
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png']
+    if (!allowedTypes.includes(file.type)) {
+      imageError.value = 'Only PNG and JPEG images are allowed'
+      showImageErrorModal.value = true
+      return
+    }
+
     const reader = new FileReader()
 
     reader.onload = (e) => {
@@ -92,6 +196,20 @@ const checkElementsInViewport = () => {
       element.classList.add('visible')
     }, index * 100)
   })
+}
+
+const handleAddPhotoConfirm = (caption: string) => {
+  if (newPhotoData.value) {
+    profileStore.addImage(newPhotoData.value.url, caption)
+    logProfilePictureUpdated()
+    newPhotoData.value = null
+    showAddPhotoModal.value = false
+  }
+}
+
+const handleAddPhotoCancel = () => {
+  newPhotoData.value = null
+  showAddPhotoModal.value = false
 }
 
 onMounted(() => {
@@ -415,6 +533,21 @@ onMounted(() => {
         v-if="selectedImage && selectedImage.id !== 'avatar'"
         :image="selectedImage"
         @close="selectedImage = null"
+      />
+      <!-- Warning Modal for Image Error -->
+      <div v-if="showImageErrorModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center">
+          <h3 class="text-lg font-semibold text-yellow-600 mb-2">Image Upload Warning</h3>
+          <p class="text-gray-800 mb-4">{{ imageError }}</p>
+          <button @click="showImageErrorModal = false" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition">Close</button>
+        </div>
+      </div>
+      <!-- Use the AddPhotoModal component -->
+      <AddPhotoModal 
+        :show="showAddPhotoModal"
+        :image-url="newPhotoData?.url || ''"
+        @confirm="handleAddPhotoConfirm"
+        @cancel="handleAddPhotoCancel"
       />
     </div>
   </div>

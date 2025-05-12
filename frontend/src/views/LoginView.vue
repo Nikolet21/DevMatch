@@ -24,6 +24,7 @@ const loginForm = reactive({
 })
 
 const loginErrors = reactive<LoginFormErrors>({})
+const showLoginPassword = ref(false)
 
 const registerForm = reactive({
   firstName: '',
@@ -34,6 +35,8 @@ const registerForm = reactive({
 })
 
 const registerErrors = reactive<RegisterFormErrors>({})
+const showRegisterPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 // Password validation requirements
 const passwordRequirements = reactive({
@@ -51,15 +54,37 @@ watch(() => registerForm.password, (newPassword) => {
 })
 
 const validateLoginFormLocal = (): boolean => {
+  // Trim all fields
+  loginForm.email = loginForm.email.trim()
+  loginForm.password = loginForm.password.trim()
+  
   const errors = validateLoginForm(loginForm)
   Object.assign(loginErrors, errors)
   return Object.keys(errors).length === 0
 }
 
 const validateRegisterFormLocal = (): boolean => {
+  // Trim all fields
+  registerForm.firstName = registerForm.firstName.trim()
+  registerForm.lastName = registerForm.lastName.trim()
+  registerForm.email = registerForm.email.trim()
+  registerForm.password = registerForm.password.trim()
+  registerForm.confirmPassword = registerForm.confirmPassword.trim()
+  
+  // Name validation
+  const nameRegex = /^[A-Za-z\s]+$/
+  
+  if (!nameRegex.test(registerForm.firstName)) {
+    registerErrors.firstName = 'First name should only contain letters and spaces'
+  }
+  
+  if (!nameRegex.test(registerForm.lastName)) {
+    registerErrors.lastName = 'Last name should only contain letters and spaces'
+  }
+  
   const errors = validateRegisterForm(registerForm)
   Object.assign(registerErrors, errors)
-  return Object.keys(errors).length === 0
+  return Object.keys(registerErrors).length === 0
 }
 
 const handleLogin = async () => {
@@ -119,11 +144,6 @@ const handleRegister = async () => {
     console.error('Registration error:', error)
   }
 }
-
-const accountText = computed(() => ({
-  message: activeTab.value === 'login' ? "Don't have an account?" : 'Already have an account?',
-  action: activeTab.value === 'login' ? 'Create one now' : 'Sign in'
-}))
 
 // Custom animation handling
 const checkElementsInViewport = () => {
@@ -231,11 +251,38 @@ onMounted(() => {
                   <input
                     id="password"
                     v-model="loginForm.password"
-                    type="password"
+                    :type="showLoginPassword ? 'text' : 'password'"
                     placeholder="Enter your password"
                     :class="{'ring-red-500': loginErrors.password}"
-                    class="block w-full rounded-lg border-0 py-3 pl-10 pr-3 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                    class="block w-full rounded-lg border-0 py-3 pl-10 pr-10 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
                   />
+                  <button
+                    type="button"
+                    @click="showLoginPassword = !showLoginPassword"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    <svg
+                      v-if="showLoginPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5 text-gray-400 hover:text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg
+                      v-else
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5 text-gray-400 hover:text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  </button>
                 </div>
                 <p v-if="loginErrors.password" class="mt-1 text-sm text-red-600">{{ loginErrors.password }}</p>
               </div>
@@ -296,6 +343,7 @@ onMounted(() => {
                       v-model="registerForm.firstName"
                       placeholder="First name"
                       :class="{'ring-red-500': registerErrors.firstName}"
+                      @input="registerForm.firstName = registerForm.firstName.replace(/[^A-Za-z\s]/g, '')"
                       class="block w-full rounded-lg border-0 py-3 pl-10 pr-3 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
                     />
                   </div>
@@ -315,6 +363,7 @@ onMounted(() => {
                       v-model="registerForm.lastName"
                       placeholder="Last name"
                       :class="{'ring-red-500': registerErrors.lastName}"
+                      @input="registerForm.lastName = registerForm.lastName.replace(/[^A-Za-z\s]/g, '')"
                       class="block w-full rounded-lg border-0 py-3 pl-10 pr-3 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
                     />
                   </div>
@@ -352,11 +401,38 @@ onMounted(() => {
                   <input
                     id="register-password"
                     v-model="registerForm.password"
-                    type="password"
+                    :type="showRegisterPassword ? 'text' : 'password'"
                     placeholder="Create password"
                     :class="{'ring-red-500': registerErrors.password}"
-                    class="block w-full rounded-lg border-0 py-3 pl-10 pr-3 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                    class="block w-full rounded-lg border-0 py-3 pl-10 pr-10 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
                   />
+                  <button
+                    type="button"
+                    @click="showRegisterPassword = !showRegisterPassword"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    <svg
+                      v-if="showRegisterPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5 text-gray-400 hover:text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg
+                      v-else
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5 text-gray-400 hover:text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  </button>
                 </div>
                 <p v-if="registerErrors.password" class="mt-1 text-xs text-red-600">{{ registerErrors.password }}</p>
 
@@ -454,11 +530,38 @@ onMounted(() => {
                   <input
                     id="confirmPassword"
                     v-model="registerForm.confirmPassword"
-                    type="password"
+                    :type="showConfirmPassword ? 'text' : 'password'"
                     placeholder="Confirm password"
                     :class="{'ring-red-500': registerErrors.confirmPassword}"
-                    class="block w-full rounded-lg border-0 py-3 pl-10 pr-3 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
+                    class="block w-full rounded-lg border-0 py-3 pl-10 pr-10 text-text-primary bg-white/50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 transition-all duration-200 hover:bg-white focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm"
                   />
+                  <button
+                    type="button"
+                    @click="showConfirmPassword = !showConfirmPassword"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    <svg
+                      v-if="showConfirmPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5 text-gray-400 hover:text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg
+                      v-else
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5 text-gray-400 hover:text-gray-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  </button>
                 </div>
                 <p v-if="registerErrors.confirmPassword" class="mt-1 text-xs text-red-600">{{ registerErrors.confirmPassword }}</p>
               </div>
